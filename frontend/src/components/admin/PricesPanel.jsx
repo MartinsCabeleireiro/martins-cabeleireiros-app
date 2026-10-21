@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api, errorText, useServices } from "@/lib/api";
+import { formatDuration } from "@/lib/site";
 
 const PriceRow = ({ s, onSaved }) => {
   const [val, setVal] = useState(s.price ?? "");
@@ -13,7 +14,7 @@ const PriceRow = ({ s, onSaved }) => {
   };
   return (
     <li className="flex flex-col gap-3 border-b border-[#D4AF37]/15 py-5 sm:flex-row sm:items-center sm:justify-between">
-      <p className="font-display text-2xl text-zinc-50">{s.name}</p>
+      <p className="font-display text-2xl text-zinc-50">{s.name} <span className="font-mono-x text-xs text-zinc-400">· {formatDuration(s.duration_min)}</span></p>
       <div className="flex items-center gap-3">
         <span className="text-sm text-zinc-400">R$</span>
         <input data-testid={`admin-price-input-${s.slug}`} inputMode="decimal" placeholder="Sob consulta" value={val} onChange={(e) => setVal(e.target.value)} className="w-32 border-b border-[#D4AF37]/30 bg-transparent py-2 font-mono text-zinc-50 placeholder:text-zinc-500 focus:border-[#D4AF37] focus:outline-none" />

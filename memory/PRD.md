@@ -21,6 +21,11 @@ Agendamento (serviço, data seg–sáb, horários 30 min 08:00–19:30, sem dupl
 - Agendamento salva no banco e abre WhatsApp com mensagem pronta
 - Painel /admin: login, lista/filtro de agendamentos, confirmar/cancelar/excluir, WhatsApp do cliente, edição de preços (vazio = "Sob consulta")
 
+## Implemented (2026-10-21, iteração 2)
+- Procedimentos individuais com duração: Corte Masculino 30min, Corte Feminino 45min, Coloração 1h30, Luzes 2h30, Escova 40min, Hidratação 45min, Designer de Sobrancelha 20min, Selagem 4h (agrupados nas 5 categorias do catálogo)
+- Agenda bloqueia o intervalo inteiro do serviço (sobreposição + término até 20:00), validado no backend e na UI
+- Duração exibida no catálogo, tabela de preços, seleção de serviço, resumo (início–término), mensagem WhatsApp e painel admin
+
 ## Backlog
 - P1: logo oficial do cliente (substituir mark SVG), fotos reais do salão, preços reais (via painel)
 - P1: bloquear dias/horários (feriados, folgas)

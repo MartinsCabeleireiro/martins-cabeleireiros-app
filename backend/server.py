@@ -50,6 +50,8 @@ class Service(BaseDocument):
     slug: str
     name: str
     description: str
+    group: str = ""
+    duration_min: int = 30
     price: Optional[float] = None
     order: int = 0
 
@@ -60,6 +62,7 @@ class Booking(BaseDocument):
     service_slug: str
     service_name: str
     price: Optional[float] = None
+    duration_min: int = 30
     date: str
     time: str
     notes: str = ""
@@ -90,14 +93,33 @@ class LoginIn(BaseModel):
 
 
 SEED_SERVICES = [
-    ("corte", "Corte Masculino e Feminino", "Cortes clássicos e modernos, para ele e para ela, com acabamento preciso."),
-    ("coloracao", "Coloração e Luzes", "Cor uniforme, luzes e mechas para renovar o visual com brilho."),
-    ("escova", "Escova e Hidratação", "Escova modelada e hidratação para fios macios e alinhados."),
-    ("sobrancelha", "Designer de Sobrancelha", "Desenho de sobrancelha que valoriza o olhar e a harmonia do rosto."),
-    ("tratamentos", "Outros procedimentos e tratamentos capilares", "Tratamentos e procedimentos capilares sob avaliação no salão."),
+    ("corte-masculino", "Corte Masculino", "corte", 30, "Corte clássico ou moderno com acabamento preciso."),
+    ("corte-feminino", "Corte Feminino", "corte", 45, "Corte personalizado para o seu estilo."),
+    ("coloracao", "Coloração", "coloracao", 90, "Cor uniforme e brilho para os fios."),
+    ("luzes", "Luzes", "coloracao", 150, "Luzes e mechas para iluminar o visual."),
+    ("escova", "Escova", "escova", 40, "Escova modelada, lisa ou com movimento."),
+    ("hidratacao", "Hidratação", "escova", 45, "Hidratação para fios macios e alinhados."),
+    ("sobrancelha", "Designer de Sobrancelha", "sobrancelha", 20, "Desenho que valoriza o olhar e a harmonia do rosto."),
+    ("selagem", "Selagem", "tratamentos", 240, "Tratamento capilar que reduz o volume e o frizz."),
 ]
 
 SLOTS = [f"{h:02d}:{m:02d}" for h in range(8, 20) for m in (0, 30)]
+CLOSE_MIN = 20 * 60
+
+
+def to_min(t: str) -> int:
+    h, m = t.split(":")
+    return int(h) * 60 + int(m)
+
+
+async def busy_intervals(date: str):
+    docs = await db.bookings.find({"date": date, "status": {"$ne": "cancelado"}}, {"time": 1, "duration_min": 1}).to_list(500)
+    return [(to_min(d["time"]), to_min(d["time"]) + d.get("duration_min", 30)) for d in docs]
+
+
+def slot_free(start: int, duration: int, busy) -> bool:
+    end = start + duration
+    return end <= CLOSE_MIN and all(end <= b0 or start >= b1 for b0, b1 in busy)
 
 
 def hash_password(p: str) -> str:
@@ -182,9 +204,12 @@ async def update_price(slug: str, body: PriceIn, admin: dict = Depends(get_admin
 
 
 @api.get("/availability")
-async def availability(date: str):
-    taken = await db.bookings.distinct("time", {"date": date, "status": {"$ne": "cancelado"}})
-    return {"date": date, "slots": SLOTS, "taken": taken}
+async def availability(date: str, service: Optional[str] = None):
+    svc = await db.services.find_one({"slug": service}) if service else None
+    duration = svc["duration_min"] if svc else 30
+    busy = await busy_intervals(date)
+    unavailable = [s for s in SLOTS if not slot_free(to_min(s), duration, busy)]
+    return {"date": date, "duration_min": duration, "slots": SLOTS, "unavailable": unavailable}
 
 
 @api.post("/bookings")
@@ -204,10 +229,14 @@ async def create_booking(body: BookingIn):
     svc = await db.services.find_one({"slug": body.service_slug})
     if not svc:
         raise HTTPException(400, "Serviço inválido")
-    if await db.bookings.find_one({"date": body.date, "time": body.time, "status": {"$ne": "cancelado"}}):
-        raise HTTPException(409, "Este horário acabou de ser reservado. Escolha outro.")
+    duration = svc.get("duration_min", 30)
+    if to_min(body.time) + duration > CLOSE_MIN:
+        raise HTTPException(400, "Este serviço não termina antes do fechamento (20:00). Escolha um horário mais cedo.")
+    if not slot_free(to_min(body.time), duration, await busy_intervals(body.date)):
+        raise HTTPException(409, "Este horário conflita com outro agendamento. Escolha outro.")
     booking = Booking(name=body.name.strip(), phone=body.phone.strip(), service_slug=svc["slug"],
-                      service_name=svc["name"], price=svc.get("price"), date=body.date, time=body.time,
+                      service_name=svc["name"], price=svc.get("price"), duration_min=duration,
+                      date=body.date, time=body.time,
                       notes=body.notes.strip(), created_at=datetime.now(timezone.utc).isoformat())
     res = await db.bookings.insert_one(booking.to_mongo())
     booking.id = str(res.inserted_id)
@@ -243,9 +272,13 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.login_attempts.create_index("identifier")
     await db.services.create_index("slug", unique=True)
-    for i, (slug, name, desc) in enumerate(SEED_SERVICES):
-        if not await db.services.find_one({"slug": slug}):
-            await db.services.insert_one(Service(slug=slug, name=name, description=desc, order=i).to_mongo())
+    for i, (slug, name, group, dur, desc) in enumerate(SEED_SERVICES):
+        await db.services.update_one(
+            {"slug": slug},
+            {"$set": {"name": name, "group": group, "duration_min": dur, "description": desc, "order": i},
+             "$setOnInsert": {"price": None}},
+            upsert=True)
+    await db.services.delete_many({"slug": {"$nin": [s[0] for s in SEED_SERVICES]}})
     email = os.environ["ADMIN_EMAIL"].lower()
     pw = os.environ["ADMIN_PASSWORD"]
     existing = await db.users.find_one({"email": email})

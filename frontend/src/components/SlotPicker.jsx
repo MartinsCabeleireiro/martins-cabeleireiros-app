@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 
-export const SlotPicker = ({ slots, taken, isPast, value, onChange }) => (
+export const SlotPicker = ({ slots, unavailable, isPast, value, onChange }) => (
   <div data-testid="booking-slots" className="grid grid-cols-3 gap-2 sm:grid-cols-4">
     {slots.map((t) => {
-      const off = taken.includes(t) || isPast(t);
+      const off = unavailable.includes(t) || isPast(t);
       const on = value === t;
       return (
         <motion.button

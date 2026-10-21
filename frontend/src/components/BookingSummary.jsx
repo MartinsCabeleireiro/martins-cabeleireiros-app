@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { Check, Loader2, MessageCircle } from "lucide-react";
-import { formatPrice } from "@/lib/site";
+import { formatPrice, formatDuration, addMinutes } from "@/lib/site";
 
 const Row = ({ k, v, testid }) => (
   <div className="flex items-baseline justify-between gap-4 border-b border-[#D4AF37]/10 py-4">
@@ -18,7 +18,8 @@ export const BookingSummary = ({ service, date, time, sending, done, onReset }) 
       <h3 className="font-display mb-6 text-3xl text-zinc-50">Seu horário</h3>
       <Row k="Serviço" v={service?.name} testid="summary-service" />
       <Row k="Data" v={date && format(date, "EEE, dd 'de' MMM", { locale: ptBR })} testid="summary-date" />
-      <Row k="Horário" v={time} testid="summary-time" />
+      <Row k="Duração" v={service && formatDuration(service.duration_min)} testid="summary-duration" />
+      <Row k="Horário" v={time && (service ? `${time} às ${addMinutes(time, service.duration_min)}` : time)} testid="summary-time" />
       <Row k="Valor" v={service && formatPrice(service.price)} testid="summary-price" />
       {done ? (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} data-testid="booking-success" className="mt-8 flex flex-col gap-4">

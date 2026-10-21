@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Check, X, Trash2, MessageCircle } from "lucide-react";
 import { api, errorText } from "@/lib/api";
+import { formatDuration, addMinutes } from "@/lib/site";
 
 const FILTERS = [["todos", "Todos"], ["pendente", "Pendentes"], ["confirmado", "Confirmados"], ["cancelado", "Cancelados"]];
 const BADGE = { pendente: "border-amber-400/40 text-amber-300", confirmado: "border-emerald-400/40 text-emerald-300", cancelado: "border-red-400/40 text-red-300" };
@@ -47,10 +48,10 @@ export const BookingsPanel = () => {
       <ul className="flex flex-col gap-3">
         {shown.map((b) => (
           <li key={b.id} data-testid={`admin-booking-row-${b.id}`} className="grid gap-4 border border-[#D4AF37]/15 bg-[#141418] p-5 md:grid-cols-[140px_1fr_auto] md:items-center">
-            <div className="font-mono-x"><p className="text-lg text-zinc-50">{b.time}</p><p className="text-xs text-zinc-400">{fmtDate(b.date)}</p></div>
+            <div className="font-mono-x"><p className="text-lg text-zinc-50">{b.time}–{addMinutes(b.time, b.duration_min || 30)}</p><p className="text-xs text-zinc-400">{fmtDate(b.date)}</p></div>
             <div>
               <p className="text-zinc-50">{b.name} <span className="text-zinc-400">· {b.phone}</span></p>
-              <p className="text-sm text-[#E5C158]">{b.service_name}</p>
+              <p data-testid={`admin-booking-service-${b.id}`} className="text-sm text-[#E5C158]">{b.service_name} <span className="font-mono-x text-xs text-zinc-400">· {formatDuration(b.duration_min || 30)}</span></p>
               {b.notes && <p className="mt-1 text-sm text-zinc-400">“{b.notes}”</p>}
             </div>
             <div className="flex items-center gap-2">

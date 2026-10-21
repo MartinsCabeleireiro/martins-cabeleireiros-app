@@ -8,7 +8,7 @@ import { SectionHead, Reveal } from "@/components/Reveal";
 import { SlotPicker } from "@/components/SlotPicker";
 import { BookingSummary } from "@/components/BookingSummary";
 import { api, errorText } from "@/lib/api";
-import { SLOTS, waLink } from "@/lib/site";
+import { SLOTS, waLink, formatDuration, addMinutes } from "@/lib/site";
 
 const maskPhone = (v) => {
   const d = v.replace(/\D/g, "").slice(0, 11);
@@ -30,7 +30,7 @@ export const Booking = ({ services, preselect }) => {
   const [slug, setSlug] = useState("");
   const [date, setDate] = useState();
   const [time, setTime] = useState("");
-  const [taken, setTaken] = useState([]);
+  const [unavailable, setUnavailable] = useState([]);
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(null);
@@ -41,11 +41,11 @@ export const Booking = ({ services, preselect }) => {
     if (!dateStr) return undefined;
     let alive = true;
     setTime("");
-    api.get("/availability", { params: { date: dateStr } })
-      .then(({ data }) => { if (alive) setTaken(Array.isArray(data?.taken) ? data.taken : []); })
-      .catch(() => { if (alive) setTaken([]); });
+    api.get("/availability", { params: { date: dateStr, service: slug || undefined } })
+      .then(({ data }) => { if (alive) setUnavailable(Array.isArray(data?.unavailable) ? data.unavailable : []); })
+      .catch(() => { if (alive) setUnavailable([]); });
     return () => { alive = false; };
-  }, [dateStr]);
+  }, [dateStr, slug, done]);
 
   const service = useMemo(() => services.find((s) => s.slug === slug), [services, slug]);
   const isPast = (t) => {
@@ -58,16 +58,16 @@ export const Booking = ({ services, preselect }) => {
   const submit = async (e) => {
     e.preventDefault();
     if (!service || !date || !time) return toast.error("Escolha serviço, data e horário.");
+    const end = addMinutes(time, service.duration_min);
     if (form.name.trim().length < 2 || form.phone.replace(/\D/g, "").length < 10) return toast.error("Informe seu nome e um WhatsApp válido.");
     setSending(true);
     const win = window.open("about:blank", "_blank");
     try {
       const { data } = await api.post("/bookings", { service_slug: slug, date: dateStr, time, ...form });
-      const msg = `Olá! Gostaria de agendar no Martins Cabeleireiro:\n\n*Nome:* ${form.name}\n*Telefone:* ${form.phone}\n*Serviço:* ${service.name}\n*Data:* ${format(date, "dd/MM/yyyy (EEEE)", { locale: ptBR })}\n*Horário:* ${time}${form.notes ? `\n*Obs.:* ${form.notes}` : ""}\n\nAguardo a confirmação!`;
+      const msg = `Olá! Gostaria de agendar no Martins Cabeleireiro:\n\n*Nome:* ${form.name}\n*Telefone:* ${form.phone}\n*Serviço:* ${service.name}\n*Data:* ${format(date, "dd/MM/yyyy (EEEE)", { locale: ptBR })}\n*Horário:* ${time} às ${end} (${formatDuration(service.duration_min)})${form.notes ? `\n*Obs.:* ${form.notes}` : ""}\n\nAguardo a confirmação!`;
       const link = waLink(msg);
       if (win) win.location.href = link;
       setDone({ ...data, link });
-      setTaken((t) => [...t, time]);
       toast.success("Agendamento enviado! Confirme pelo WhatsApp.");
     } catch (err) {
       if (win) win.close();
@@ -92,7 +92,11 @@ export const Booking = ({ services, preselect }) => {
                 <SelectValue placeholder="Escolha um serviço" />
               </SelectTrigger>
               <SelectContent className="border-[#D4AF37]/20 bg-[#141418]">
-                {services.map((s) => <SelectItem key={s.slug} value={s.slug} data-testid={`booking-service-option-${s.slug}`}>{s.name}</SelectItem>)}
+                {services.map((s) => (
+                  <SelectItem key={s.slug} value={s.slug} data-testid={`booking-service-option-${s.slug}`}>
+                    {s.name} <span className="font-mono-x ml-2 text-xs text-[#D4AF37]">· {formatDuration(s.duration_min)}</span>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Step>
@@ -101,8 +105,12 @@ export const Booking = ({ services, preselect }) => {
               <div data-testid="booking-date-picker" className="w-fit rounded-sm border border-[#D4AF37]/20 bg-[#141418]">
                 <Calendar mode="single" locale={ptBR} selected={date} onSelect={setDate} disabled={[{ before: today() }, { dayOfWeek: [0] }]} />
               </div>
-              {date ? <SlotPicker slots={SLOTS} taken={taken} isPast={isPast} value={time} onChange={setTime} />
-                : <p className="self-center text-sm text-zinc-400">Selecione uma data (segunda a sábado) para ver os horários livres.</p>}
+              {date ? (
+                <div className="flex flex-col gap-4">
+                  {service && <p data-testid="booking-duration-hint" className="text-sm text-zinc-300">Duração estimada: <span className="text-[#E5C158]">{formatDuration(service.duration_min)}</span>. Mostramos só horários com tempo livre suficiente.</p>}
+                  <SlotPicker slots={SLOTS} unavailable={unavailable} isPast={isPast} value={time} onChange={setTime} />
+                </div>
+              ) : <p className="self-center text-sm text-zinc-400">Selecione uma data (segunda a sábado) para ver os horários livres.</p>}
             </div>
           </Step>
           <Step n="03" label="Seus dados">

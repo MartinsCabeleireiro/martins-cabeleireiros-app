@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { SectionHead, Reveal } from "@/components/Reveal";
-import { formatPrice, SITE } from "@/lib/site";
+import { formatPrice, formatDuration, SITE } from "@/lib/site";
 
 export const Prices = ({ services }) => {
   const ref = useRef(null);
@@ -12,7 +12,7 @@ export const Prices = ({ services }) => {
     <section id="precos" ref={ref} className="border-t border-[#D4AF37]/10 bg-[#111114] py-24 lg:py-36">
       <div className="mx-auto max-w-7xl px-5 sm:px-8">
         <SectionHead index="02" eyebrow="Tabela de preços" title={<>O menu da <em className="text-[#D4AF37]">casa.</em></>}>
-          Valores atualizados pelo salão. Serviços marcados como “sob consulta” são avaliados no atendimento.
+          Valores atualizados pelo salão, com o tempo médio de cada procedimento. Serviços marcados como “sob consulta” são avaliados no atendimento.
         </SectionHead>
         <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
           <Reveal className="lg:col-span-5">
@@ -29,6 +29,7 @@ export const Prices = ({ services }) => {
                   <div className="flex items-baseline gap-4">
                     <span className="font-mono-x text-xs text-[#D4AF37]">{String(i + 1).padStart(2, "0")}</span>
                     <h3 className="font-display text-2xl text-zinc-50 transition-colors group-hover:text-[#E5C158] sm:text-3xl">{s.name}</h3>
+                    <span data-testid={`price-duration-${s.slug}`} className="font-mono-x shrink-0 text-xs text-zinc-400">{formatDuration(s.duration_min)}</span>
                     <span className="leader hidden sm:block" />
                     <span className="font-mono-x ml-auto shrink-0 text-sm text-[#E5C158] sm:ml-0">{formatPrice(s.price)}</span>
                   </div>
