@@ -61,6 +61,7 @@ class Service(BaseDocument):
 class Booking(BaseDocument):
     name: str
     phone: str
+    phone_digits: str = ""
     service_slug: str
     service_name: str
     price: Optional[float] = None
@@ -300,7 +301,7 @@ async def create_booking(body: BookingIn):
         raise HTTPException(400, "Este serviço não termina antes do fechamento (20:00). Escolha um horário mais cedo.")
     if not slot_free(to_min(body.time), duration, await busy_intervals(body.date)):
         raise HTTPException(409, "Este horário não está disponível. Escolha outro.")
-    booking = Booking(name=body.name.strip(), phone=body.phone.strip(), service_slug=svc["slug"],
+    booking = Booking(name=body.name.strip(), phone=body.phone.strip(), phone_digits=norm_phone(body.phone), service_slug=svc["slug"],
                       service_name=svc["name"], price=svc.get("price"), duration_min=duration,
                       date=body.date, time=body.time,
                       notes=body.notes.strip(), created_at=datetime.now(timezone.utc).isoformat())
@@ -434,7 +435,29 @@ async def list_contacts(q: str = "", limit: int = 50, admin: dict = Depends(get_
         query = {"$or": [{"name": rx}] + ([{"phone": {"$regex": digits}}] if digits else [])}
     docs = await db.contacts.find(query).sort("name", 1).limit(min(limit, 200)).to_list(200)
     total = await db.contacts.count_documents({})
-    return {"total": total, "items": [Contact.from_mongo(d).public() for d in docs]}
+    items = [Contact.from_mongo(d).public() for d in docs]
+    today = (datetime.now(timezone.utc) - timedelta(hours=4)).date().isoformat()
+    stats = {}
+    async for s in db.bookings.aggregate([
+        {"$match": {"phone_digits": {"$in": [c["phone"] for c in items]}, "status": {"$ne": "cancelado"}, "date": {"$lte": today}}},
+        {"$group": {"_id": "$phone_digits", "last_visit": {"$max": "$date"}, "visits": {"$sum": 1}}},
+    ]):
+        stats[s["_id"]] = s
+    for c in items:
+        c["last_visit"] = stats.get(c["phone"], {}).get("last_visit")
+        c["visits"] = stats.get(c["phone"], {}).get("visits", 0)
+    return {"total": total, "items": items}
+
+
+@api.get("/contacts/{cid}/history")
+async def contact_history(cid: str, admin: dict = Depends(get_admin)):
+    if not ObjectId.is_valid(cid):
+        raise HTTPException(404, "Contato não encontrado")
+    contact = await db.contacts.find_one({"_id": ObjectId(cid)})
+    if not contact:
+        raise HTTPException(404, "Contato não encontrado")
+    docs = await db.bookings.find({"phone_digits": contact["phone"]}).sort([("date", -1), ("time", -1)]).to_list(500)
+    return [Booking.from_mongo(d).public() for d in docs]
 
 
 @api.post("/contacts")
@@ -486,6 +509,9 @@ async def startup():
     await db.services.delete_many({"slug": {"$nin": [s[0] for s in SEED_SERVICES]}})
     await db.contacts.create_index("phone", unique=True)
     await db.contacts.create_index("name")
+    await db.bookings.create_index("phone_digits")
+    async for b in db.bookings.find({"phone_digits": {"$exists": False}}, {"phone": 1}):
+        await db.bookings.update_one({"_id": b["_id"]}, {"$set": {"phone_digits": norm_phone(b.get("phone", ""))}})
     await seed_admin(os.environ["ADMIN_EMAIL"], os.environ["ADMIN_PASSWORD"], os.environ["ADMIN_NAME"])
     await seed_admin(os.environ["ADMIN2_EMAIL"], os.environ["ADMIN2_PASSWORD"], os.environ["ADMIN2_NAME"])
 

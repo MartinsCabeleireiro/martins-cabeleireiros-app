@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import { Upload, Smartphone, Trash2, CalendarPlus, UserPlus, Search } from "lucide-react";
+import { Upload, Smartphone, Trash2, CalendarPlus, UserPlus, Search, History } from "lucide-react";
 import { AdminBookingDialog } from "@/components/admin/AdminBookingDialog";
+import { ContactHistory } from "@/components/admin/ContactHistory";
 import { api, errorText } from "@/lib/api";
 import { formatPhone } from "@/lib/site";
 import { parseContactsFile, pickerSupported, pickFromPhone } from "@/lib/contacts";
@@ -9,11 +10,20 @@ import { parseContactsFile, pickerSupported, pickFromPhone } from "@/lib/contact
 const btn = "inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 px-5 py-2.5 text-sm text-zinc-100 transition-colors hover:border-[#D4AF37] hover:bg-[#D4AF37]/10";
 const field = "border-b border-[#D4AF37]/30 bg-transparent py-2 text-zinc-50 placeholder:text-zinc-500 focus:border-[#D4AF37] focus:outline-none";
 
+const lastVisit = (c) => {
+  if (!c.last_visit) return "Sem visitas ainda";
+  const [y, m, d] = c.last_visit.split("-").map(Number);
+  const days = Math.round((new Date().setHours(0, 0, 0, 0) - new Date(y, m - 1, d)) / 86400000);
+  const ago = days === 0 ? "hoje" : days === 1 ? "ontem" : `há ${days} dias`;
+  return `Última visita ${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y} (${ago}) · ${c.visits} atendimento(s)`;
+};
+
 export const ContactsPanel = () => {
   const [q, setQ] = useState("");
   const [data, setData] = useState({ total: 0, items: [] });
   const [manual, setManual] = useState({ name: "", phone: "" });
   const [booking, setBooking] = useState(null);
+  const [openId, setOpenId] = useState(null);
   const fileRef = useRef(null);
 
   const load = useCallback(async (query = "") => {
@@ -72,7 +82,7 @@ export const ContactsPanel = () => {
 
       <div>
         <div className="mb-4 flex flex-wrap items-center gap-4">
-          <div className="flex flex-1 items-center gap-2 border border-[#D4AF37]/30 px-3">
+          <div className="flex min-w-[260px] flex-1 items-center gap-2 border border-[#D4AF37]/30 px-3">
             <Search size={16} className="text-[#D4AF37]" />
             <input data-testid="contacts-search" placeholder="Buscar por nome ou telefone" value={q} onChange={(e) => setQ(e.target.value)} className="w-full bg-transparent py-3 text-zinc-50 placeholder:text-zinc-500 focus:outline-none" />
           </div>
@@ -81,18 +91,26 @@ export const ContactsPanel = () => {
         {data.items.length === 0 && <p data-testid="contacts-empty" className="border border-dashed border-[#D4AF37]/20 p-8 text-center text-zinc-400">Nenhum contato encontrado.</p>}
         <ul className="flex flex-col divide-y divide-[#D4AF37]/10 border border-[#D4AF37]/15">
           {data.items.map((c) => (
-            <li key={c.id} data-testid={`contact-row-${c.id}`} className="flex items-center gap-3 bg-[#141418] px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-zinc-50">{c.name}</p>
-                <p className="font-mono-x text-xs text-zinc-400">{formatPhone(c.phone)}{c.added_by ? ` · por ${c.added_by}` : ""}</p>
+            <li key={c.id} data-testid={`contact-row-${c.id}`} className="bg-[#141418] px-4">
+              <div className="flex items-center gap-3 py-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-zinc-50">{c.name}</p>
+                  <p className="font-mono-x text-xs text-zinc-400">{formatPhone(c.phone)}{c.added_by ? ` · por ${c.added_by}` : ""}</p>
+                  <p data-testid={`contact-last-visit-${c.id}`} className={`mt-0.5 text-xs ${c.last_visit ? "text-[#E5C158]" : "text-zinc-500"}`}>{lastVisit(c)}</p>
+                </div>
+                <button data-testid={`contact-history-toggle-${c.id}`} onClick={() => setOpenId(openId === c.id ? null : c.id)} aria-expanded={openId === c.id}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs transition-colors ${openId === c.id ? "border-[#D4AF37] text-[#D4AF37]" : "border-[#D4AF37]/30 text-zinc-200 hover:border-[#D4AF37]"}`}>
+                  <History size={14} /> <span className="hidden sm:inline">Histórico</span>
+                </button>
+                <button data-testid={`contact-book-${c.id}`} onClick={() => setBooking(c)} className="inline-flex items-center gap-1.5 rounded-full bg-[#D4AF37] px-3.5 py-1.5 text-xs font-semibold text-[#0D0D0F] hover:bg-[#E5C158]"><CalendarPlus size={14} /> <span className="hidden sm:inline">Agendar</span></button>
+                <button data-testid={`contact-delete-${c.id}`} onClick={() => remove(c.id)} aria-label="Excluir contato" className="grid h-8 w-8 place-items-center rounded-full border border-[#D4AF37]/20 text-zinc-300 hover:border-red-400 hover:text-red-300"><Trash2 size={14} /></button>
               </div>
-              <button data-testid={`contact-book-${c.id}`} onClick={() => setBooking(c)} className="inline-flex items-center gap-1.5 rounded-full bg-[#D4AF37] px-3.5 py-1.5 text-xs font-semibold text-[#0D0D0F] hover:bg-[#E5C158]"><CalendarPlus size={14} /> Agendar</button>
-              <button data-testid={`contact-delete-${c.id}`} onClick={() => remove(c.id)} aria-label="Excluir contato" className="grid h-8 w-8 place-items-center rounded-full border border-[#D4AF37]/20 text-zinc-300 hover:border-red-400 hover:text-red-300"><Trash2 size={14} /></button>
+              {openId === c.id && <div className="border-t border-[#D4AF37]/10"><ContactHistory contactId={c.id} /></div>}
             </li>
           ))}
         </ul>
       </div>
-      <AdminBookingDialog open={!!booking} onOpenChange={(o) => !o && setBooking(null)} contact={booking} />
+      <AdminBookingDialog open={!!booking} onOpenChange={(o) => !o && setBooking(null)} contact={booking} onCreated={() => { load(q); setOpenId(null); }} />
     </div>
   );
 };

@@ -38,6 +38,9 @@ Agendamento (serviço, data seg–sáb, horários 30 min 08:00–19:30, sem dupl
 - Novo agendamento pelo painel (Agenda do dia e Clientes), já confirmado
 - Segundo admin (esposa) via ADMIN2_* no .env
 
+## Implemented (2026-10-21, iteração 5)
+- Histórico do cliente: cada contato mostra última visita (data, há X dias, nº de atendimentos); botão Histórico expande próximos horários e atendimentos anteriores (status, valor, total gasto). Bookings ganharam phone_digits (backfill no startup) para casar com contatos
+
 ## Backlog
 - P1: logo oficial do cliente (substituir mark SVG), fotos reais do salão, preços reais (via painel)
 - P1: bloquear dias/horários (feriados, folgas)
