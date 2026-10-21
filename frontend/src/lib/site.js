@@ -64,3 +64,17 @@ export const SLOTS = Array.from({ length: 24 }, (_, i) => {
 });
 
 export const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+
+export const phoneDigits = (p) => {
+  let d = String(p || "").replace(/\D/g, "");
+  if (d.startsWith("55") && d.length >= 12) d = d.slice(2);
+  return d;
+};
+export const formatPhone = (p) => {
+  const d = phoneDigits(p);
+  if (d.length === 11) return `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7)}`;
+  if (d.length === 10) return `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}`;
+  return p;
+};
+export const clientWa = (phone, text) => `https://wa.me/55${phoneDigits(phone)}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+export const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

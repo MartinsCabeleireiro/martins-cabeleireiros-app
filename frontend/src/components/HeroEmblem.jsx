@@ -1,7 +1,9 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { LogoMark } from "@/components/Logo";
+import { useLogo } from "@/lib/logo";
 
 export const HeroEmblem = ({ className = "" }) => {
+  const { url } = useLogo();
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
   const rx = useSpring(useTransform(my, [-0.5, 0.5], [14, -14]), { stiffness: 120, damping: 14 });
@@ -32,7 +34,7 @@ export const HeroEmblem = ({ className = "" }) => {
           </text>
         </svg>
         <div className="absolute inset-[18%] grid place-items-center rounded-full border border-[#D4AF37]/40 bg-[#0D0D0F]/70 shadow-[0_0_80px_rgba(212,175,55,0.18)] backdrop-blur-md [transform:translateZ(40px)]">
-          <LogoMark className="h-[58%] w-[58%] text-[#D4AF37]" />
+          {url ? <img src={url} alt="Logo Martins Cabeleireiro" className="h-[70%] w-[70%] object-contain" /> : <LogoMark className="h-[58%] w-[58%] text-[#D4AF37]" />}
         </div>
       </motion.div>
     </motion.div>

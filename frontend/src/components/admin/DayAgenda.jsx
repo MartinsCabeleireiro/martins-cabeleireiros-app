@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarPlus } from "lucide-react";
+import { AdminBookingDialog } from "@/components/admin/AdminBookingDialog";
 import { api, errorText } from "@/lib/api";
 import { addMinutes, formatDuration, toMin } from "@/lib/site";
 
@@ -23,6 +24,7 @@ export const DayAgenda = () => {
   const [day, setDay] = useState(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; });
   const [bookings, setBookings] = useState([]);
   const [blocks, setBlocks] = useState([]);
+  const [newOpen, setNewOpen] = useState(false);
   const ds = toStr(day);
 
   const load = useCallback(async () => {
@@ -47,7 +49,9 @@ export const DayAgenda = () => {
         <input data-testid="agenda-date-input" type="date" value={ds} onChange={(e) => { if (e.target.value) { const [y, m, d] = e.target.value.split("-").map(Number); setDay(new Date(y, m - 1, d)); } }} className="border-b border-[#D4AF37]/30 bg-transparent py-2 text-zinc-50 [color-scheme:dark] focus:outline-none" />
         <p data-testid="agenda-day-label" className="font-display text-2xl text-zinc-50 first-letter:uppercase">{LABEL(day)}</p>
         <span data-testid="agenda-count" className="font-mono-x ml-auto text-xs text-zinc-400">{dayBookings.length} atendimento(s)</span>
+        <button data-testid="agenda-new-booking" onClick={() => setNewOpen(true)} className="inline-flex items-center gap-2 rounded-full bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#0D0D0F] hover:bg-[#E5C158]"><CalendarPlus size={15} /> Novo agendamento</button>
       </div>
+      <AdminBookingDialog open={newOpen} onOpenChange={setNewOpen} date={ds} onCreated={load} />
       <div className="relative border border-[#D4AF37]/15 bg-[#141418]" style={{ height: (CLOSE - OPEN) * PX + 16 }}>
         {HOURS.map((h) => (
           <div key={h} className="absolute inset-x-0 flex items-start" style={{ top: (h * 60 - OPEN) * PX + 8 }}>

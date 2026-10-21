@@ -31,6 +31,13 @@ Agendamento (serviço, data seg–sáb, horários 30 min 08:00–19:30, sem dupl
 - Bloqueios (coleção blocks): dia inteiro ou intervalo; aplicados na disponibilidade, no calendário público (/api/blocked-days) e na criação de agendamento
 - Painel: abas Agenda do dia (linha do tempo 08–20h com atendimentos e bloqueios em tamanho real), Agendamentos, Bloqueios, Preços
 
+## Implemented (2026-10-21, iteração 4)
+- Lembretes: aba "Lembretes" lista horários confirmados da data (padrão amanhã) com botão que abre WhatsApp do cliente com mensagem pronta; marca reminded_at
+- Logo: upload/troca/remoção no painel (aba Logo, PNG/JPG/WEBP até 2MB, salvo no MongoDB em settings); aparece no topo, emblema do hero, painel e favicon
+- Clientes: base de contatos compartilhada (coleção contacts, único por telefone), importação .vcf/.csv (Google) + Contact Picker no Android/Chrome + cadastro manual, busca, "Agendar" a partir do contato
+- Novo agendamento pelo painel (Agenda do dia e Clientes), já confirmado
+- Segundo admin (esposa) via ADMIN2_* no .env
+
 ## Backlog
 - P1: logo oficial do cliente (substituir mark SVG), fotos reais do salão, preços reais (via painel)
 - P1: bloquear dias/horários (feriados, folgas)

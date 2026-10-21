@@ -1,3 +1,5 @@
+import { useLogo } from "@/lib/logo";
+
 export const LogoMark = ({ className = "" }) => (
   <svg viewBox="0 0 64 64" fill="none" className={className} aria-hidden="true">
     <circle cx="32" cy="32" r="30" stroke="currentColor" strokeWidth="1.4" />
@@ -8,12 +10,22 @@ export const LogoMark = ({ className = "" }) => (
   </svg>
 );
 
-export const Wordmark = ({ testid = "nav-logo" }) => (
-  <span data-testid={testid} className="flex items-center gap-3 text-[#D4AF37]">
-    <LogoMark className="h-10 w-10" />
-    <span className="flex flex-col leading-none">
-      <span className="font-caps text-lg font-semibold tracking-[0.22em] text-zinc-50">MARTINS</span>
-      <span className="font-mono-x mt-1 text-[10px] uppercase tracking-[0.34em] text-[#D4AF37]">Cabeleireiro</span>
+export const Wordmark = ({ testid = "nav-logo" }) => {
+  const { url } = useLogo();
+  if (url) {
+    return (
+      <span data-testid={testid} className="flex items-center">
+        <img src={url} alt="Martins Cabeleireiro" className="h-12 w-auto max-w-[180px] object-contain" />
+      </span>
+    );
+  }
+  return (
+    <span data-testid={testid} className="flex items-center gap-3 text-[#D4AF37]">
+      <LogoMark className="h-10 w-10" />
+      <span className="flex flex-col leading-none">
+        <span className="font-caps text-lg font-semibold tracking-[0.22em] text-zinc-50">MARTINS</span>
+        <span className="font-mono-x mt-1 text-[10px] uppercase tracking-[0.34em] text-[#D4AF37]">Cabeleireiro</span>
+      </span>
     </span>
-  </span>
-);
+  );
+};

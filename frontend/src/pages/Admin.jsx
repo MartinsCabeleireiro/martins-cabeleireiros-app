@@ -8,6 +8,9 @@ import { BookingsPanel } from "@/components/admin/BookingsPanel";
 import { PricesPanel } from "@/components/admin/PricesPanel";
 import { DayAgenda } from "@/components/admin/DayAgenda";
 import { BlocksPanel } from "@/components/admin/BlocksPanel";
+import { RemindersPanel } from "@/components/admin/RemindersPanel";
+import { ContactsPanel } from "@/components/admin/ContactsPanel";
+import { SettingsPanel } from "@/components/admin/SettingsPanel";
 import { api } from "@/lib/api";
 
 export default function Admin() {
@@ -38,18 +41,24 @@ export default function Admin() {
       </header>
       <main className="mx-auto max-w-6xl px-5 py-12 sm:px-8">
         <p className="eyebrow mb-3">Painel do salão</p>
-        <h1 className="font-display mb-10 text-4xl text-zinc-50 sm:text-5xl">Olá, Martins.</h1>
+        <h1 data-testid="admin-greeting" className="font-display mb-10 text-4xl text-zinc-50 sm:text-5xl">Olá, {user.name || "Martins"}.</h1>
         <Tabs defaultValue="dia">
           <TabsList className="mb-8 h-auto flex-wrap bg-[#141418]">
             <TabsTrigger data-testid="admin-tab-day" value="dia">Agenda do dia</TabsTrigger>
             <TabsTrigger data-testid="admin-tab-bookings" value="agenda">Agendamentos</TabsTrigger>
+            <TabsTrigger data-testid="admin-tab-reminders" value="lembretes">Lembretes</TabsTrigger>
+            <TabsTrigger data-testid="admin-tab-contacts" value="clientes">Clientes</TabsTrigger>
             <TabsTrigger data-testid="admin-tab-blocks" value="bloqueios">Bloqueios</TabsTrigger>
             <TabsTrigger data-testid="admin-tab-prices" value="precos">Preços</TabsTrigger>
+            <TabsTrigger data-testid="admin-tab-settings" value="logo">Logo</TabsTrigger>
           </TabsList>
           <TabsContent value="dia"><DayAgenda /></TabsContent>
           <TabsContent value="agenda"><BookingsPanel /></TabsContent>
+          <TabsContent value="lembretes"><RemindersPanel /></TabsContent>
+          <TabsContent value="clientes"><ContactsPanel /></TabsContent>
           <TabsContent value="bloqueios"><BlocksPanel /></TabsContent>
           <TabsContent value="precos"><PricesPanel /></TabsContent>
+          <TabsContent value="logo"><SettingsPanel /></TabsContent>
         </Tabs>
       </main>
     </div>

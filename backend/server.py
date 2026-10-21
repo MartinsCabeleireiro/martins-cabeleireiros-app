@@ -10,10 +10,12 @@ import logging
 from datetime import datetime, timezone, timedelta, date as date_cls
 from typing import Annotated, Optional, List, Literal
 
+import base64
 import bcrypt
 import jwt
 from bson import ObjectId
-from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends
+from fastapi import FastAPI, APIRouter, HTTPException, Request, Depends, UploadFile, File, Response
+from pymongo import UpdateOne
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic import BaseModel, Field, BeforeValidator, ConfigDict
 from starlette.middleware.cors import CORSMiddleware
@@ -67,6 +69,7 @@ class Booking(BaseDocument):
     time: str
     notes: str = ""
     status: Literal["pendente", "confirmado", "cancelado"] = "pendente"
+    reminded_at: Optional[str] = None
     created_at: str
 
 
@@ -330,6 +333,145 @@ async def delete_booking(bid: str, admin: dict = Depends(get_admin)):
     return {"ok": True}
 
 
+@api.post("/bookings/{bid}/reminded")
+async def mark_reminded(bid: str, admin: dict = Depends(get_admin)):
+    if not ObjectId.is_valid(bid):
+        raise HTTPException(404, "Agendamento não encontrado")
+    now = datetime.now(timezone.utc).isoformat()
+    res = await db.bookings.update_one({"_id": ObjectId(bid)}, {"$set": {"reminded_at": now}})
+    if res.matched_count == 0:
+        raise HTTPException(404, "Agendamento não encontrado")
+    return {"ok": True, "reminded_at": now}
+
+
+# ---------- Logo ----------
+LOGO_TYPES = {"image/png", "image/jpeg", "image/webp"}
+
+
+@api.get("/settings")
+async def get_settings():
+    doc = await db.settings.find_one({"key": "logo"}, {"version": 1})
+    return {"has_logo": bool(doc), "logo_version": doc.get("version") if doc else None}
+
+
+@api.get("/logo")
+async def get_logo():
+    doc = await db.settings.find_one({"key": "logo"})
+    if not doc:
+        raise HTTPException(404, "Sem logo")
+    return Response(content=base64.b64decode(doc["data"]), media_type=doc["content_type"],
+                    headers={"Cache-Control": "public, max-age=86400"})
+
+
+@api.post("/settings/logo")
+async def upload_logo(file: UploadFile = File(...), admin: dict = Depends(get_admin)):
+    if file.content_type not in LOGO_TYPES:
+        raise HTTPException(400, "Envie uma imagem PNG, JPG ou WEBP")
+    data = await file.read()
+    if len(data) > 2 * 1024 * 1024:
+        raise HTTPException(400, "A imagem deve ter até 2 MB")
+    version = str(int(datetime.now(timezone.utc).timestamp()))
+    await db.settings.update_one({"key": "logo"}, {"$set": {
+        "data": base64.b64encode(data).decode(), "content_type": file.content_type, "version": version}}, upsert=True)
+    return {"has_logo": True, "logo_version": version}
+
+
+@api.delete("/settings/logo")
+async def delete_logo(admin: dict = Depends(get_admin)):
+    await db.settings.delete_one({"key": "logo"})
+    return {"has_logo": False, "logo_version": None}
+
+
+# ---------- Contacts ----------
+class Contact(BaseDocument):
+    name: str
+    phone: str
+    added_by: str = ""
+    created_at: str
+
+
+class ContactIn(BaseModel):
+    name: str = Field(default="", max_length=120)
+    phone: str = Field(max_length=40)
+
+
+class ContactsImport(BaseModel):
+    contacts: List[ContactIn] = Field(max_length=5000)
+
+
+def norm_phone(p: str) -> str:
+    d = re.sub(r"\D", "", p or "")
+    if d.startswith("55") and len(d) >= 12:
+        d = d[2:]
+    if d.startswith("0") and len(d) >= 11:
+        d = d.lstrip("0")
+    return d
+
+
+async def upsert_contacts(items: List[ContactIn], who: str):
+    now = datetime.now(timezone.utc).isoformat()
+    ops, seen = [], set()
+    for c in items:
+        phone = norm_phone(c.phone)
+        if len(phone) < 10 or phone in seen:
+            continue
+        seen.add(phone)
+        name = (c.name or "").strip() or phone
+        ops.append(UpdateOne({"phone": phone}, {"$setOnInsert": Contact(
+            name=name, phone=phone, added_by=who, created_at=now).to_mongo()}, upsert=True))
+    if not ops:
+        return 0, len(items)
+    res = await db.contacts.bulk_write(ops, ordered=False)
+    return res.upserted_count, len(items) - res.upserted_count
+
+
+@api.get("/contacts")
+async def list_contacts(q: str = "", limit: int = 50, admin: dict = Depends(get_admin)):
+    query = {}
+    if q.strip():
+        rx = {"$regex": re.escape(q.strip()), "$options": "i"}
+        digits = re.sub(r"\D", "", q)
+        query = {"$or": [{"name": rx}] + ([{"phone": {"$regex": digits}}] if digits else [])}
+    docs = await db.contacts.find(query).sort("name", 1).limit(min(limit, 200)).to_list(200)
+    total = await db.contacts.count_documents({})
+    return {"total": total, "items": [Contact.from_mongo(d).public() for d in docs]}
+
+
+@api.post("/contacts")
+async def add_contact(body: ContactIn, admin: dict = Depends(get_admin)):
+    added, _ = await upsert_contacts([body], admin["name"] or admin["email"])
+    if not added:
+        raise HTTPException(400, "Telefone inválido ou contato já cadastrado")
+    return {"ok": True}
+
+
+@api.post("/contacts/import")
+async def import_contacts(body: ContactsImport, admin: dict = Depends(get_admin)):
+    added, skipped = await upsert_contacts(body.contacts, admin["name"] or admin["email"])
+    return {"added": added, "skipped": skipped}
+
+
+@api.delete("/contacts/{cid}")
+async def delete_contact(cid: str, admin: dict = Depends(get_admin)):
+    if not ObjectId.is_valid(cid):
+        raise HTTPException(404, "Contato não encontrado")
+    await db.contacts.delete_one({"_id": ObjectId(cid)})
+    return {"ok": True}
+
+
+async def seed_admin(email: str, pw: str, name: str):
+    email = email.lower()
+    existing = await db.users.find_one({"email": email})
+    if existing is None:
+        await db.users.insert_one({"email": email, "password_hash": hash_password(pw), "name": name,
+                                   "role": "admin", "created_at": datetime.now(timezone.utc).isoformat()})
+    else:
+        upd = {"name": name}
+        if not verify_password(pw, existing["password_hash"]):
+            upd["password_hash"] = hash_password(pw)
+        await db.users.update_one({"email": email}, {"$set": upd})
+
+
 @app.on_event("startup")
 async def startup():
     await db.users.create_index("email", unique=True)
@@ -342,14 +484,10 @@ async def startup():
              "$setOnInsert": {"price": float(price)}},
             upsert=True)
     await db.services.delete_many({"slug": {"$nin": [s[0] for s in SEED_SERVICES]}})
-    email = os.environ["ADMIN_EMAIL"].lower()
-    pw = os.environ["ADMIN_PASSWORD"]
-    existing = await db.users.find_one({"email": email})
-    if existing is None:
-        await db.users.insert_one({"email": email, "password_hash": hash_password(pw), "name": "Admin",
-                                   "role": "admin", "created_at": datetime.now(timezone.utc).isoformat()})
-    elif not verify_password(pw, existing["password_hash"]):
-        await db.users.update_one({"email": email}, {"$set": {"password_hash": hash_password(pw)}})
+    await db.contacts.create_index("phone", unique=True)
+    await db.contacts.create_index("name")
+    await seed_admin(os.environ["ADMIN_EMAIL"], os.environ["ADMIN_PASSWORD"], os.environ["ADMIN_NAME"])
+    await seed_admin(os.environ["ADMIN2_EMAIL"], os.environ["ADMIN2_PASSWORD"], os.environ["ADMIN2_NAME"])
 
 
 app.include_router(api)
