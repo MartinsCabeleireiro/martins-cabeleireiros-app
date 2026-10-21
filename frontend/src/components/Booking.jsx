@@ -34,7 +34,13 @@ export const Booking = ({ services, preselect }) => {
   const [form, setForm] = useState({ name: "", phone: "", notes: "" });
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(null);
+  const [blockedDays, setBlockedDays] = useState([]);
 
+  useEffect(() => {
+    api.get("/blocked-days")
+      .then(({ data }) => setBlockedDays(Array.isArray(data) ? data.map((d) => { const [y, m, dd] = d.split("-").map(Number); return new Date(y, m - 1, dd); }) : []))
+      .catch(() => setBlockedDays([]));
+  }, []);
   useEffect(() => { if (preselect?.slug) setSlug(preselect.slug); }, [preselect]);
   const dateStr = date ? format(date, "yyyy-MM-dd") : "";
   useEffect(() => {
@@ -103,7 +109,7 @@ export const Booking = ({ services, preselect }) => {
           <Step n="02" label="Data e horário">
             <div className="grid gap-6 md:grid-cols-[auto_1fr]">
               <div data-testid="booking-date-picker" className="w-fit rounded-sm border border-[#D4AF37]/20 bg-[#141418]">
-                <Calendar mode="single" locale={ptBR} selected={date} onSelect={setDate} disabled={[{ before: today() }, { dayOfWeek: [0] }]} />
+                <Calendar mode="single" locale={ptBR} selected={date} onSelect={setDate} disabled={[{ before: today() }, { dayOfWeek: [0] }, ...blockedDays]} />
               </div>
               {date ? (
                 <div className="flex flex-col gap-4">

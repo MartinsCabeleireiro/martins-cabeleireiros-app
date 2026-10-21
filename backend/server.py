@@ -92,15 +92,38 @@ class LoginIn(BaseModel):
     password: str
 
 
+class Block(BaseDocument):
+    date: str
+    all_day: bool = True
+    start: Optional[str] = None
+    end: Optional[str] = None
+    reason: str = ""
+    created_at: str
+
+
+class BlockIn(BaseModel):
+    date: str
+    all_day: bool = True
+    start: Optional[str] = None
+    end: Optional[str] = None
+    reason: str = Field(default="", max_length=80)
+
+
 SEED_SERVICES = [
-    ("corte-masculino", "Corte Masculino", "corte", 30, "Corte clássico ou moderno com acabamento preciso."),
-    ("corte-feminino", "Corte Feminino", "corte", 45, "Corte personalizado para o seu estilo."),
-    ("coloracao", "Coloração", "coloracao", 90, "Cor uniforme e brilho para os fios."),
-    ("luzes", "Luzes", "coloracao", 150, "Luzes e mechas para iluminar o visual."),
-    ("escova", "Escova", "escova", 40, "Escova modelada, lisa ou com movimento."),
-    ("hidratacao", "Hidratação", "escova", 45, "Hidratação para fios macios e alinhados."),
-    ("sobrancelha", "Designer de Sobrancelha", "sobrancelha", 20, "Desenho que valoriza o olhar e a harmonia do rosto."),
-    ("selagem", "Selagem", "tratamentos", 240, "Tratamento capilar que reduz o volume e o frizz."),
+    ("corte-masculino", "Corte Masculino", "corte", 30, 25, "Corte clássico ou moderno com acabamento preciso."),
+    ("corte-feminino", "Corte Feminino", "corte", 45, 30, "Corte personalizado para o seu estilo."),
+    ("barba", "Barba", "corte", 30, 20, "Modelagem e acabamento da barba."),
+    ("sobrancelha", "Designer de Sobrancelha", "sobrancelha", 20, 20, "Desenho que valoriza o olhar e a harmonia do rosto."),
+    ("selagem-masculino", "Selagem Masculino", "tratamentos", 120, 100, "Selagem capilar para o cabelo masculino."),
+    ("selagem-tradicional", "Selagem Tradicional", "tratamentos", 240, 150, "Selagem capilar tradicional."),
+    ("selagem-organica", "Selagem Orgânica", "tratamentos", 300, 180, "Selagem capilar orgânica."),
+    ("botox-tradicional", "Botox Tradicional", "tratamentos", 240, 150, "Botox capilar tradicional."),
+    ("botox-organico", "Botox Orgânico", "tratamentos", 240, 150, "Botox capilar orgânico."),
+    ("luzes-masculina", "Luzes Masculina", "coloracao", 120, 80, "Luzes para o cabelo masculino."),
+    ("luzes", "Luzes", "coloracao", 240, 250, "Luzes e mechas para iluminar o visual."),
+    ("coloracao", "Coloração", "coloracao", 90, 80, "Cor uniforme e brilho para os fios."),
+    ("escova", "Escova", "escova", 40, 60, "Escova modelada, lisa ou com movimento."),
+    ("hidratacao", "Hidratação", "escova", 60, 60, "Hidratação para fios macios e alinhados."),
 ]
 
 SLOTS = [f"{h:02d}:{m:02d}" for h in range(8, 20) for m in (0, 30)]
@@ -114,7 +137,10 @@ def to_min(t: str) -> int:
 
 async def busy_intervals(date: str):
     docs = await db.bookings.find({"date": date, "status": {"$ne": "cancelado"}}, {"time": 1, "duration_min": 1}).to_list(500)
-    return [(to_min(d["time"]), to_min(d["time"]) + d.get("duration_min", 30)) for d in docs]
+    busy = [(to_min(d["time"]), to_min(d["time"]) + d.get("duration_min", 30)) for d in docs]
+    async for b in db.blocks.find({"date": date}):
+        busy.append((0, 24 * 60) if b.get("all_day") else (to_min(b["start"]), to_min(b["end"])))
+    return busy
 
 
 def slot_free(start: int, duration: int, busy) -> bool:
@@ -195,6 +221,43 @@ async def list_services():
     return [Service.from_mongo(d).public() for d in docs]
 
 
+@api.get("/blocked-days")
+async def blocked_days():
+    return await db.blocks.distinct("date", {"all_day": True})
+
+
+@api.get("/blocks")
+async def list_blocks(admin: dict = Depends(get_admin)):
+    docs = await db.blocks.find().sort([("date", 1), ("start", 1)]).to_list(1000)
+    return [Block.from_mongo(d).public() for d in docs]
+
+
+@api.post("/blocks")
+async def create_block(body: BlockIn, admin: dict = Depends(get_admin)):
+    try:
+        date_cls.fromisoformat(body.date)
+    except ValueError:
+        raise HTTPException(400, "Data inválida")
+    if not body.all_day:
+        valid = SLOTS + ["20:00"]
+        if body.start not in valid or body.end not in valid or to_min(body.end) <= to_min(body.start):
+            raise HTTPException(400, "Informe um intervalo de horário válido")
+    block = Block(date=body.date, all_day=body.all_day, start=None if body.all_day else body.start,
+                  end=None if body.all_day else body.end, reason=body.reason.strip(),
+                  created_at=datetime.now(timezone.utc).isoformat())
+    res = await db.blocks.insert_one(block.to_mongo())
+    block.id = str(res.inserted_id)
+    return block.public()
+
+
+@api.delete("/blocks/{bid}")
+async def delete_block(bid: str, admin: dict = Depends(get_admin)):
+    if not ObjectId.is_valid(bid):
+        raise HTTPException(404, "Bloqueio não encontrado")
+    await db.blocks.delete_one({"_id": ObjectId(bid)})
+    return {"ok": True}
+
+
 @api.put("/services/{slug}")
 async def update_price(slug: str, body: PriceIn, admin: dict = Depends(get_admin)):
     res = await db.services.update_one({"slug": slug}, {"$set": {"price": body.price}})
@@ -233,7 +296,7 @@ async def create_booking(body: BookingIn):
     if to_min(body.time) + duration > CLOSE_MIN:
         raise HTTPException(400, "Este serviço não termina antes do fechamento (20:00). Escolha um horário mais cedo.")
     if not slot_free(to_min(body.time), duration, await busy_intervals(body.date)):
-        raise HTTPException(409, "Este horário conflita com outro agendamento. Escolha outro.")
+        raise HTTPException(409, "Este horário não está disponível. Escolha outro.")
     booking = Booking(name=body.name.strip(), phone=body.phone.strip(), service_slug=svc["slug"],
                       service_name=svc["name"], price=svc.get("price"), duration_min=duration,
                       date=body.date, time=body.time,
@@ -272,11 +335,11 @@ async def startup():
     await db.users.create_index("email", unique=True)
     await db.login_attempts.create_index("identifier")
     await db.services.create_index("slug", unique=True)
-    for i, (slug, name, group, dur, desc) in enumerate(SEED_SERVICES):
+    for i, (slug, name, group, dur, price, desc) in enumerate(SEED_SERVICES):
         await db.services.update_one(
             {"slug": slug},
             {"$set": {"name": name, "group": group, "duration_min": dur, "description": desc, "order": i},
-             "$setOnInsert": {"price": None}},
+             "$setOnInsert": {"price": float(price)}},
             upsert=True)
     await db.services.delete_many({"slug": {"$nin": [s[0] for s in SEED_SERVICES]}})
     email = os.environ["ADMIN_EMAIL"].lower()

@@ -16,23 +16,29 @@ export const waLink = (text) =>
   `https://wa.me/${SITE.wa}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 
 export const GROUPS = [
-  { key: "corte", name: "Corte Masculino e Feminino", description: "Cortes clássicos e modernos, para ele e para ela, com acabamento preciso.", image: "/img/corte.jpg" },
+  { key: "corte", name: "Corte e Barba", description: "Cortes clássicos e modernos, para ele e para ela, e barba com acabamento preciso.", image: "/img/corte.jpg" },
   { key: "coloracao", name: "Coloração e Luzes", description: "Cor uniforme, luzes e mechas para renovar o visual com brilho.", image: "/img/coloracao.jpg" },
+  { key: "tratamentos", name: "Selagem e Botox capilar", description: "Tratamentos capilares tradicionais e orgânicos para fios alinhados e com brilho.", image: "/img/tratamentos.jpg" },
   { key: "escova", name: "Escova e Hidratação", description: "Escova modelada e hidratação para fios macios e alinhados.", image: "/img/escova.jpg" },
   { key: "sobrancelha", name: "Designer de Sobrancelha", description: "Desenho de sobrancelha que valoriza o olhar.", image: "/img/sobrancelha.jpg" },
-  { key: "tratamentos", name: "Outros procedimentos e tratamentos capilares", description: "Tratamentos capilares sob avaliação no salão.", image: "/img/tratamentos.jpg" },
 ];
 
-const fb = (slug, name, group, duration_min, description) => ({ slug, name, group, duration_min, description, price: null });
+const fb = (slug, name, group, duration_min, price) => ({ slug, name, group, duration_min, price, description: "" });
 export const FALLBACK_SERVICES = [
-  fb("corte-masculino", "Corte Masculino", "corte", 30, "Corte clássico ou moderno com acabamento preciso."),
-  fb("corte-feminino", "Corte Feminino", "corte", 45, "Corte personalizado para o seu estilo."),
-  fb("coloracao", "Coloração", "coloracao", 90, "Cor uniforme e brilho para os fios."),
-  fb("luzes", "Luzes", "coloracao", 150, "Luzes e mechas para iluminar o visual."),
-  fb("escova", "Escova", "escova", 40, "Escova modelada, lisa ou com movimento."),
-  fb("hidratacao", "Hidratação", "escova", 45, "Hidratação para fios macios e alinhados."),
-  fb("sobrancelha", "Designer de Sobrancelha", "sobrancelha", 20, "Desenho que valoriza o olhar e a harmonia do rosto."),
-  fb("selagem", "Selagem", "tratamentos", 240, "Tratamento capilar que reduz o volume e o frizz."),
+  fb("corte-masculino", "Corte Masculino", "corte", 30, 25),
+  fb("corte-feminino", "Corte Feminino", "corte", 45, 30),
+  fb("barba", "Barba", "corte", 30, 20),
+  fb("sobrancelha", "Designer de Sobrancelha", "sobrancelha", 20, 20),
+  fb("selagem-masculino", "Selagem Masculino", "tratamentos", 120, 100),
+  fb("selagem-tradicional", "Selagem Tradicional", "tratamentos", 240, 150),
+  fb("selagem-organica", "Selagem Orgânica", "tratamentos", 300, 180),
+  fb("botox-tradicional", "Botox Tradicional", "tratamentos", 240, 150),
+  fb("botox-organico", "Botox Orgânico", "tratamentos", 240, 150),
+  fb("luzes-masculina", "Luzes Masculina", "coloracao", 120, 80),
+  fb("luzes", "Luzes", "coloracao", 240, 250),
+  fb("coloracao", "Coloração", "coloracao", 90, 80),
+  fb("escova", "Escova", "escova", 40, 60),
+  fb("hidratacao", "Hidratação", "escova", 60, 60),
 ];
 
 export const formatDuration = (min) => {
@@ -56,3 +62,5 @@ export const SLOTS = Array.from({ length: 24 }, (_, i) => {
   const h = 8 + Math.floor(i / 2);
   return `${String(h).padStart(2, "0")}:${i % 2 ? "30" : "00"}`;
 });
+
+export const toMin = (t) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
