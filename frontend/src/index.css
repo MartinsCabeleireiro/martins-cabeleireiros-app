@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 8% 5%;
+    --foreground: 240 10% 96%;
+    --card: 240 12% 8%;
+    --card-foreground: 240 10% 96%;
+    --popover: 240 12% 8%;
+    --popover-foreground: 240 10% 96%;
+    --primary: 46 65% 52%;
+    --primary-foreground: 240 8% 5%;
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 240 10% 96%;
+    --muted: 240 10% 12%;
+    --muted-foreground: 240 5% 68%;
+    --accent: 46 40% 18%;
+    --accent-foreground: 46 65% 70%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 46 30% 22%;
+    --input: 46 30% 22%;
+    --ring: 46 65% 52%;
+    --radius: 0.25rem;
+    --gold: #d4af37;
+    --ink: #0d0d0f;
+  }
+  * { @apply border-border; }
+  html { background: var(--ink); }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Plus Jakarta Sans", sans-serif;
+  }
+  ::selection { background: var(--gold); color: var(--ink); }
+}
+
+.font-display { font-family: "Cormorant Garamond", serif; }
+.font-caps { font-family: "Cinzel", serif; }
+.font-mono-x { font-family: "JetBrains Mono", monospace; }
+
+.eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #d9bd62;
+}
+
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.marquee-track { animation: marquee 60s linear infinite; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.spin-slow { animation: spin 38s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.leader { flex: 1; border-bottom: 1px dotted rgba(212, 175, 55, 0.35); transform: translateY(-0.35em); }
+
+.map-dark { filter: grayscale(1) invert(0.92) contrast(0.9) brightness(0.85); }
+
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track, .spin-slow { animation: none; }
+}

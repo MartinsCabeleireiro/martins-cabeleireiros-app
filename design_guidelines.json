@@ -1,0 +1,217 @@
+{
+  "project_name": "Martins Cabeleireiro & Barbearia",
+  "archetype": "LUXURY & PERFORMANCE CLASSIC BARBERSHOP",
+  "language": "pt-BR",
+  "theme": {
+    "type": "Dark Elegance / Classic Barbershop",
+    "background_primary": "#0D0D0F",
+    "background_secondary": "#141418",
+    "background_elevated": "#1A1A22",
+    "surface_card": "#18181F",
+    "accent_primary": "#D4AF37",
+    "accent_gold_hover": "#E5C158",
+    "accent_amber": "#C59B27",
+    "text_primary": "#F4F4F6",
+    "text_secondary": "#A1A1AA",
+    "text_muted": "#71717A",
+    "border_subtle": "rgba(212, 175, 55, 0.15)",
+    "border_active": "rgba(212, 175, 55, 0.4)",
+    "overlay_glass": "rgba(18, 18, 22, 0.75)"
+  },
+  "typography": {
+    "heading_font": "Cormorant Garamond, serif",
+    "subheading_font": "Cinzel, serif",
+    "body_font": "Plus Jakarta Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "font_imports": "@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');",
+    "scale": {
+      "hero_title": "text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-none",
+      "section_heading": "text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight",
+      "subsection_heading": "text-xl sm:text-2xl font-medium",
+      "card_heading": "text-lg sm:text-xl font-medium",
+      "body": "text-base text-zinc-300 leading-relaxed",
+      "caption": "text-xs sm:text-sm uppercase tracking-[0.2em] text-amber-400/80 font-mono"
+    }
+  },
+  "visual_enhancers": {
+    "hero_spotlight": "Radial gold subtle spotlight gradient overlay (bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/10 via-zinc-950/80 to-zinc-950)",
+    "glassmorphism": "backdrop-blur-xl bg-zinc-950/80 border border-amber-500/20 shadow-2xl",
+    "border_glow": "hover:border-amber-500/50 transition-all duration-300 hover:shadow-[0_0_25px_rgba(212,175,55,0.15)]",
+    "grain_overlay": "pointer-events-none opacity-20 mixing texture background with subtle SVG noise",
+    "logo_badge": "Embossed circular gold ring emblem with scissor/razor vector monogram and 'MARTINS CABELEIREIRO EST. 2026' text curved"
+  },
+  "image_urls": {
+    "hero_background": "https://images.unsplash.com/photo-1621645582931-d1d3e6564943?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwyfHxiYXJiZXJzaG9wJTIwbHV4dXJ5JTIwaGFpciUyMHNhbG9uJTIwaGFpcmN1dHMlMjBncm9vbWluZ3xlbnwwfHx8fDE3OTI1NzczNjN8MA&ixlib=rb-4.1.0&q=85",
+    "corte_masculino": "https://images.unsplash.com/photo-1647140655214-e4a2d914971f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHxfHxiYXJiZXJzaG9wfGVufDB8fHx8MTc5MjU3NzM2M3ww&ixlib=rb-4.1.0&q=85",
+    "corte_feminino": "https://images.unsplash.com/photo-1707812343087-c9ff9e5abb43?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHw0fHxoYWlyJTIwc2Fsb24lMjBsdXh1cnklMjB3b21lbiUyMHN0eWxpbmclMjBjb2xvcmluZyUyMGhhaXJ8ZW58MHx8fHwxNzkyNTc3MzcwfDA&ixlib=rb-4.1.0&q=85",
+    "coloracao_luzes": "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHxffGhhaXIlMjBjb2xvcmluZ3xlbnwwfHx8fDE3OTI1NzczNzB8MA&ixlib=rb-4.1.0&q=85",
+    "escova_hidratacao": "https://images.unsplash.com/photo-1554519934-e32b1629d9ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaH3fHxoYWlyJTIwc2Fsb24lMjBsdXh1cnl8ZW58MHx8fHwxNzkyNTc3MzcwfDA&ixlib=rb-4.1.0&q=85",
+    "designer_sobrancelha": "https://images.pexels.com/photos/5970247/pexels-photo-5970247.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+    "outros_tratamentos": "https://images.unsplash.com/photo-1598524374912-6b0b0bab43dd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHxiYXJiZXJzaG9wJTIwbHV4dXJ5fGVufDB8fHx8MTc5MjU3NzM2M3ww&ixlib=rb-4.1.0&q=85",
+    "barber_chair": "https://images.unsplash.com/photo-1621645582931-d1d3e6564943?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHwyfHxiYXJiZXJzaG9wJTIwbHV4dXJ5fGVufDB8fHx8MTc5MjU3NzM2M3ww&ixlib=rb-4.1.0&q=85"
+  },
+  "business_info": {
+    "name": "Martins Cabeleireiro & Barbearia",
+    "whatsapp_number": "5569999640881",
+    "whatsapp_display": "(69) 99964-0881",
+    "address_street": "Rua Apolinário Cortes, 572",
+    "address_neighborhood": "Nova Ouro Preto",
+    "address_city_state": "Ouro Preto do Oeste - RO",
+    "full_address": "Rua Apolinário Cortes, 572 - Nova Ouro Preto, Ouro Preto do Oeste - RO",
+    "opening_hours": "Segunda a Sábado: 08:00 - 20:00",
+    "google_maps_embed": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3921.233512345678!2d-62.2612345!3d-10.7123456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMTDCsDQyJzQ0LjQiUyA2MsKwMTUnNDAuNCJX!5e0!3m2!1spt-BR!2sbr!4v1700000000000!5m2!1spt-BR!2sbr"
+  },
+  "services_and_prices": [
+    {
+      "id": "corte-masculino",
+      "category": "masculino",
+      "name": "Corte Masculino Premium",
+      "description": "Corte moderno ou clássico com lavagem, finalização com pomada e toalha quente.",
+      "price": 45.00,
+      "duration": "45 min",
+      "image": "https://images.unsplash.com/photo-1647140655214-e4a2d914971f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHxfHxiYXJiZXJzaG9wfGVufDB8fHx8MTc5MjU3NzM2M3ww&ixlib=rb-4.1.0&q=85",
+      "featured": true
+    },
+    {
+      "id": "barba-completa",
+      "category": "masculino",
+      "name": "Barba & Terapia Facial",
+      "description": "Modelagem de barba com navalha, vapor de ozônio e óleos hidratantes.",
+      "price": 40.00,
+      "duration": "30 min",
+      "image": "https://images.unsplash.com/photo-1598524374912-6b0b0bab43dd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHxiYXJiZXJzaG9wJTIwbHV4dXJ5fGVufDB8fHx8MTc5MjU3NzM2M3ww&ixlib=rb-4.1.0&q=85",
+      "featured": false
+    },
+    {
+      "id": "corte-feminino",
+      "category": "feminino",
+      "name": "Corte Feminino & Visagismo",
+      "description": "Consultoria de visagismo, corte personalizado, escova modeladora e finalização.",
+      "price": 75.00,
+      "duration": "60 min",
+      "image": "https://images.unsplash.com/photo-1707812343087-c9ff9e5abb43?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHw0fHxoYWlyJTIwc2Fsb24lMjBsdXh1cnklMjB3b21lbiUyMHN0eWxpbmclMjBjb2xvcmluZyUyMGhhaXJ8ZW58MHx8fHwxNzkyNTc3MzcwfDA&ixlib=rb-4.1.0&q=85",
+      "featured": true
+    },
+    {
+      "id": "coloracao-luzes",
+      "category": "tratamentos",
+      "name": "Coloração e Luzes",
+      "description": "Técnicas avançadas de iluminação, mechas, balayage ou coloração integral com matização.",
+      "price": 180.00,
+      "duration": "120 min",
+      "image": "https://images.unsplash.com/photo-1634449571010-02389ed0f9b0?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaHxffGhhaXIlMjBjb2xvcmluZ3xlbnwwfHx8fDE3OTI1NzczNzB8MA&ixlib=rb-4.1.0&q=85",
+      "featured": true
+    },
+    {
+      "id": "escova-hidratacao",
+      "category": "tratamentos",
+      "name": "Escova e Hidratação Profunda",
+      "description": "Tratamento capilar intensivo com ampolas nutritivas, reconstrução e escova lisa ou modelada.",
+      "price": 90.00,
+      "duration": "60 min",
+      "image": "https://images.unsplash.com/photo-1554519934-e32b1629d9ee?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDV8MHwxfHNlYXJjaH3fHxoYWlyJTIwc2Fsb24lMjBsdXh1cnl8ZW58MHx8fHwxNzkyNTc3MzcwfDA&ixlib=rb-4.1.0&q=85",
+      "featured": false
+    },
+    {
+      "id": "designer-sobrancelha",
+      "category": "estetica",
+      "name": "Designer de Sobrancelha",
+      "description": "Mapeamento facial, alinhamento com simetria e opção de pigmentação henna suave.",
+      "price": 35.00,
+      "duration": "30 min",
+      "image": "https://images.pexels.com/photos/5970247/pexels-photo-5970247.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "featured": false
+    },
+    {
+      "id": "outros-procedimentos",
+      "category": "tratamentos",
+      "name": "Outros Procedimentos & Tratamentos",
+      "description": "Selagem, cauterização, cronograma capilar personalizado e barboterapia VIP.",
+      "price": 120.00,
+      "duration": "90 min",
+      "image": "https://images.unsplash.com/photo-1598524374912-6b0b0bab43dd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzV8MHwxfHNlYXJjaHw0fHxiYXJiZXJzaG9wJTIwbHV4dXJ5fGVufDB8fHx8MTc5MjU3NzM2M3ww&ixlib=rb-4.1.0&q=85",
+      "featured": false
+    }
+  ],
+  "layout_architecture": {
+    "header": {
+      "type": "Sticky Glassmorphic Nav Bar",
+      "elements": [
+        "Spotlight Martins Logo monogram + typography badge",
+        "Nav Links (Início, Serviços, Preços, Agendamento, Localização)",
+        "Admin Login Access button (shield icon)",
+        "Primary Action Button: 'Agendar Horário'"
+      ]
+    },
+    "hero_section": {
+      "type": "Cinematic Kinetic Hero with 3D Parallax & Line Masking",
+      "elements": [
+        "Martins Cabeleireiro & Barbearia prominent brand spotlight",
+        "Kinetic typography reveal on entrance: 'Elegância, Tradição e Estilo Unissex em Ouro Preto do Oeste'",
+        "Slow Editorial Marquee ticker: 'CORTE MASCULINO • CORTE FEMININO • COLORATION & LUZES • ESCOVA & HIDRATAÇÃO • DESIGN DE SOBRANCELHA'",
+        "CTA buttons: 'Agendar Agora' (Gold primary) & 'Ver Tabela de Preços' (Outline gold)"
+      ]
+    },
+    "bento_catalog": {
+      "type": "Mode A Asymmetric Bento Grid",
+      "spans": {
+        "hero_card": "col-span-1 md:col-span-2 row-span-2 (Corte Masculino & Feminino)",
+        "highlight_card": "col-span-1 md:col-span-1 row-span-2 (Coloração & Luzes)",
+        "standard_cards": "col-span-1 row-span-1 (Escova, Sobrancelhas, Outros Tratamentos)"
+      }
+    },
+    "booking_flow": {
+      "type": "Interactive Instant Booking Engine",
+      "steps": [
+        "Step 1: Selection of Service(s) and Category",
+        "Step 2: Date Picker (Shadcn Calendar) and Available Time Slots (08:00 to 19:00)",
+        "Step 3: Customer Details (Nome Completo, Telefone/WhatsApp, Observações)",
+        "Step 4: Confirmation Action -> Stores booking in Backend API AND automatically generates formatted WhatsApp prefilled message to open (69) 99964-0881"
+      ]
+    },
+    "whatsapp_message_format": "Olá! Gostaria de confirmar meu agendamento no Martins Cabeleireiro:%0A%0A*Cliente:* {name}%0A*Telefone:* {phone}%0A*Serviço:* {service_name}%0A*Data:* {date}%0A*Horário:* {time_slot}%0A*Valor Estimado:* R$ {price}%0A%0AAguardo a confirmação!",
+    "admin_panel": {
+      "type": "Secure Admin Dashboard with Password Access",
+      "default_password": "admin",
+      "capabilities": [
+        "View and filter all bookings (Pendente, Confirmado, Cancelado)",
+        "Toggle booking status with immediate feedback toast",
+        "Edit service prices dynamically (updates live price table across site)",
+        "Manage working hours and blocked dates/slots"
+      ]
+    }
+  },
+  "testing_and_data_ids": {
+    "header_logo": "data-testid=\"nav-logo\"",
+    "nav_services_link": "data-testid=\"nav-link-services\"",
+    "nav_prices_link": "data-testid=\"nav-link-prices\"",
+    "nav_booking_link": "data-testid=\"nav-link-booking\"",
+    "nav_location_link": "data-testid=\"nav-link-location\"",
+    "admin_login_btn": "data-testid=\"admin-login-button\"",
+    "hero_cta_booking": "data-testid=\"hero-cta-booking\"",
+    "service_card_prefix": "data-testid=\"service-card-\"",
+    "booking_form": "data-testid=\"booking-form\"",
+    "booking_service_select": "data-testid=\"booking-service-select\"",
+    "booking_date_picker": "data-testid=\"booking-date-picker\"",
+    "booking_slot_prefix": "data-testid=\"booking-slot-\"",
+    "booking_name_input": "data-testid=\"booking-name-input\"",
+    "booking_phone_input": "data-testid=\"booking-phone-input\"",
+    "booking_submit_btn": "data-testid=\"booking-submit-button\"",
+    "floating_whatsapp_btn": "data-testid=\"floating-whatsapp-button\"",
+    "admin_modal": "data-testid=\"admin-login-modal\"",
+    "admin_password_input": "data-testid=\"admin-password-input\"",
+    "admin_submit_btn": "data-testid=\"admin-submit-button\"",
+    "admin_dashboard": "data-testid=\"admin-dashboard\"",
+    "admin_booking_row_prefix": "data-testid=\"admin-booking-row-\"",
+    "admin_price_edit_input_prefix": "data-testid=\"admin-price-input-\""
+  },
+  "instructions_to_main_agent": [
+    "Ensure all components are built in JS (.js / .jsx) as per React configured stack.",
+    "Use framer-motion for smooth entrance animations, line reveal hero, hover lifts, and modal transitions.",
+    "Include 'lenis' or smooth scroll implementation for luxury feel.",
+    "Ensure total dark theme aesthetic: rich charcoal/void background (#0D0D0F) with gold accents (#D4AF37) and crisp borders.",
+    "Place data-testid on every interactive button, input, tab, modal toggle, and booking status badge.",
+    "The booking submit action MUST save booking into backend/state and immediately open WhatsApp with pre-filled encoded text.",
+    "Verify price editing in Admin Panel instantly reflects on the public Price Table and Booking Form dropdowns."
+  ]
+}
