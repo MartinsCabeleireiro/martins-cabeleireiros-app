@@ -1,0 +1,23 @@
+{
+  "background_color": "#ffffff",
+  "description": "Martins Cabeleireiro — barbearia e salão em Ouro Preto do Oeste - RO. Agende seu horário online.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Martins Cabeleireiros",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Martins",
+  "start_url": "/",
+  "theme_color": "#0D0D0F",
+  "icons": [
+    {
+      "src": "https://frontend-three-drab-59.vercel.app/favicon.svg",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://frontend-three-drab-59.vercel.app/favicon.ico",
+      "type": "image/x-icon"
+    }
+  ],
+  "id": "/"
+}
