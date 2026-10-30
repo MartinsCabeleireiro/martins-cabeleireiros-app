@@ -34,8 +34,7 @@ export const AdminBookingDialog = ({ open, onOpenChange, contact, date, onCreate
     if (!f.slug || !f.time) return toast.error("Escolha serviço e horário.");
     setBusy(true);
     try {
-      const { data } = await api.post("/bookings", { name: f.name, phone: f.phone, service_slug: f.slug, date: f.date, time: f.time, notes: f.notes });
-      await api.patch(`/bookings/${data.id}`, { status: "confirmado" });
+      await api.post("/admin/bookings", { name: f.name, phone: f.phone, service_slug: f.slug, date: f.date, time: f.time, notes: f.notes });
       api.post("/contacts", { name: f.name, phone: f.phone }).catch(() => {});
       toast.success("Agendamento criado e confirmado.");
       onCreated?.();
@@ -67,14 +66,20 @@ export const AdminBookingDialog = ({ open, onOpenChange, contact, date, onCreate
             </SelectContent>
           </Select>
           <input data-testid="admin-booking-date" type="date" required className={field} value={f.date} onChange={(e) => setF({ ...f, date: e.target.value, time: "" })} />
-          <div className="grid grid-cols-4 gap-2">
-            {SLOTS.map((t) => {
-              const off = unavailable.includes(t);
-              return (
-                <button type="button" key={t} disabled={off} data-testid={`admin-booking-slot-${t.replace(":", "")}`} onClick={() => setF({ ...f, time: t })}
-                  className={`font-mono-x rounded-full border py-1.5 text-xs ${f.time === t ? "border-[#D4AF37] bg-[#D4AF37] text-[#0D0D0F]" : off ? "border-zinc-800 text-zinc-600 line-through" : "border-[#D4AF37]/25 text-zinc-200 hover:border-[#D4AF37]"}`}>{t}</button>
-              );
-            })}
+          <div className="flex flex-col gap-2">
+            <p className="text-xs text-zinc-400">Todos os horários estão liberados para encaixe. Os marcados em âmbar já têm algo agendado ou bloqueado.</p>
+            <div className="grid grid-cols-4 gap-2">
+              {SLOTS.map((t) => {
+                const busyT = unavailable.includes(t);
+                return (
+                  <button type="button" key={t} data-testid={`admin-booking-slot-${t.replace(":", "")}`} onClick={() => setF({ ...f, time: t })}
+                    className={`font-mono-x rounded-full border py-1.5 text-xs ${f.time === t ? "border-[#D4AF37] bg-[#D4AF37] text-[#0D0D0F]" : busyT ? "border-amber-400/40 text-amber-300 hover:border-amber-300" : "border-[#D4AF37]/25 text-zinc-200 hover:border-[#D4AF37]"}`}>{t}</button>
+                );
+              })}
+            </div>
+            <label className="mt-1 flex items-center gap-3 text-xs text-zinc-400">Ou outro horário:
+              <input data-testid="admin-booking-custom-time" type="time" className={`${field} w-32`} value={f.time} onChange={(e) => setF({ ...f, time: e.target.value })} />
+            </label>
           </div>
           <input data-testid="admin-booking-notes" placeholder="Observações (opcional)" maxLength={300} className={field} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} />
           <button data-testid="admin-booking-submit" disabled={busy} className="inline-flex items-center justify-center gap-2 rounded-full bg-[#D4AF37] py-3 text-sm font-semibold text-[#0D0D0F] hover:bg-[#E5C158] disabled:opacity-60">

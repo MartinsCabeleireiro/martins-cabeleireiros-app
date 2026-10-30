@@ -41,6 +41,13 @@ Agendamento (serviço, data seg–sáb, horários 30 min 08:00–19:30, sem dupl
 ## Implemented (2026-10-21, iteração 5)
 - Histórico do cliente: cada contato mostra última visita (data, há X dias, nº de atendimentos); botão Histórico expande próximos horários e atendimentos anteriores (status, valor, total gasto). Bookings ganharam phone_digits (backfill no startup) para casar com contatos
 
+## Implemented (2026-10-30, iteração 6)
+- Importado Contatos.vcf (1268 cartões): 1175 telefones únicos válidos na base; removidos 482 registros duplicados/inválidos de uma importação anterior pelo painel (backup em /app/imports/contacts_backup_2026-10-30.json). Script: /app/scripts/vcf_parse.py
+- Normalização de telefone no backend reforçada (DDD válido, 9º dígito, números sem DDD → 69, descarta 0800/0300/4004)
+- Agendamento pelo painel = encaixe sem travas (POST /api/admin/bookings: ignora sobreposição, bloqueios, fechamento, domingo e passado; aceita horário livre); site público continua com travas
+- Agenda do dia mostra encaixes sobrepostos lado a lado (lanes)
+- Gaveta do menu do site ganhou link "Acesso Administrativo"
+
 ## Backlog
 - P1: logo oficial do cliente (substituir mark SVG), fotos reais do salão, preços reais (via painel)
 - P1: bloquear dias/horários (feriados, folgas)

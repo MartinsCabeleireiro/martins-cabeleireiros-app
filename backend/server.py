@@ -301,10 +301,31 @@ async def create_booking(body: BookingIn):
         raise HTTPException(400, "Este serviço não termina antes do fechamento (20:00). Escolha um horário mais cedo.")
     if not slot_free(to_min(body.time), duration, await busy_intervals(body.date)):
         raise HTTPException(409, "Este horário não está disponível. Escolha outro.")
-    booking = Booking(name=body.name.strip(), phone=body.phone.strip(), phone_digits=norm_phone(body.phone), service_slug=svc["slug"],
+    booking = Booking(name=body.name.strip(), phone=body.phone.strip(), phone_digits=phone_key(body.phone), service_slug=svc["slug"],
                       service_name=svc["name"], price=svc.get("price"), duration_min=duration,
                       date=body.date, time=body.time,
                       notes=body.notes.strip(), created_at=datetime.now(timezone.utc).isoformat())
+    res = await db.bookings.insert_one(booking.to_mongo())
+    booking.id = str(res.inserted_id)
+    return booking.public()
+
+
+@api.post("/admin/bookings")
+async def admin_create_booking(body: BookingIn, admin: dict = Depends(get_admin)):
+    """Encaixe manual: sem travas de horário, sobreposição, bloqueios ou fechamento."""
+    try:
+        date_cls.fromisoformat(body.date)
+    except ValueError:
+        raise HTTPException(400, "Data inválida")
+    if not re.fullmatch(r"([01]\d|2[0-3]):[0-5]\d", body.time):
+        raise HTTPException(400, "Horário inválido")
+    svc = await db.services.find_one({"slug": body.service_slug})
+    if not svc:
+        raise HTTPException(400, "Serviço inválido")
+    booking = Booking(name=body.name.strip(), phone=body.phone.strip(), phone_digits=phone_key(body.phone),
+                      service_slug=svc["slug"], service_name=svc["name"], price=svc.get("price"),
+                      duration_min=svc.get("duration_min", 30), date=body.date, time=body.time,
+                      notes=body.notes.strip(), status="confirmado", created_at=datetime.now(timezone.utc).isoformat())
     res = await db.bookings.insert_one(booking.to_mongo())
     booking.id = str(res.inserted_id)
     return booking.public()
@@ -400,13 +421,33 @@ class ContactsImport(BaseModel):
     contacts: List[ContactIn] = Field(max_length=5000)
 
 
+DDDS = {11, 12, 13, 14, 15, 16, 17, 18, 19, 21, 22, 24, 27, 28, 31, 32, 33, 34, 35, 37, 38,
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 51, 53, 54, 55, 61, 62, 63, 64, 65, 66, 67, 68, 69,
+        71, 73, 74, 75, 77, 79, 81, 82, 83, 84, 85, 86, 87, 88, 89, 91, 92, 93, 94, 95, 96, 97, 98, 99}
+LOCAL_DDD = "69"
+
+
 def norm_phone(p: str) -> str:
     d = re.sub(r"\D", "", p or "")
     if d.startswith("55") and len(d) >= 12:
         d = d[2:]
     if d.startswith("0") and len(d) >= 11:
         d = d.lstrip("0")
+        if len(d) >= 12:
+            d = d[2:]
+    if len(d) in (8, 9):
+        d = LOCAL_DDD + d
+    if len(d) == 10 and d[2] in "6789":
+        d = d[:2] + "9" + d[2:]
+    if len(d) not in (10, 11) or int(d[:2]) not in DDDS or d[2:5] in ("300", "400"):
+        return ""
+    if (len(d) == 11 and d[2] != "9") or (len(d) == 10 and d[2] not in "2345"):
+        return ""
     return d
+
+
+def phone_key(p: str) -> str:
+    return norm_phone(p) or re.sub(r"\D", "", p or "")
 
 
 async def upsert_contacts(items: List[ContactIn], who: str):
@@ -510,8 +551,8 @@ async def startup():
     await db.contacts.create_index("phone", unique=True)
     await db.contacts.create_index("name")
     await db.bookings.create_index("phone_digits")
-    async for b in db.bookings.find({"phone_digits": {"$exists": False}}, {"phone": 1}):
-        await db.bookings.update_one({"_id": b["_id"]}, {"$set": {"phone_digits": norm_phone(b.get("phone", ""))}})
+    async for b in db.bookings.find({}, {"phone": 1}):
+        await db.bookings.update_one({"_id": b["_id"]}, {"$set": {"phone_digits": phone_key(b.get("phone", ""))}})
     await seed_admin(os.environ["ADMIN_EMAIL"], os.environ["ADMIN_PASSWORD"], os.environ["ADMIN_NAME"])
     await seed_admin(os.environ["ADMIN2_EMAIL"], os.environ["ADMIN2_PASSWORD"], os.environ["ADMIN2_NAME"])
 

@@ -20,6 +20,18 @@ const pos = (start, end) => {
   return { top: (s - OPEN) * PX + 1, height: Math.max((e - s) * PX - 3, 22) };
 };
 
+const withLanes = (list) => {
+  const ends = [];
+  const out = [...list].sort((a, b) => a.time.localeCompare(b.time)).map((b) => {
+    const start = toMin(b.time);
+    const end = start + (b.duration_min || 30);
+    let lane = ends.findIndex((e) => e <= start);
+    if (lane < 0) { lane = ends.length; ends.push(end); } else ends[lane] = end;
+    return { b, start, end, lane };
+  });
+  return { items: out, lanes: Math.max(ends.length, 1) };
+};
+
 export const DayAgenda = () => {
   const [day, setDay] = useState(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; });
   const [bookings, setBookings] = useState([]);
@@ -66,16 +78,15 @@ export const DayAgenda = () => {
               Bloqueado {b.start}–{b.end}{b.reason ? ` · ${b.reason}` : ""}
             </div>
           ))}
-          {dayBookings.map((b) => {
-            const start = toMin(b.time);
-            const dur = b.duration_min || 30;
+          {(() => { const { items, lanes } = withLanes(dayBookings); return items.map(({ b, start, end, lane }) => {
+            const dur = end - start;
             return (
-              <div key={b.id} data-testid={`agenda-item-${b.id}`} style={pos(start, start + dur)} className={`absolute inset-x-0 overflow-hidden rounded-[2px] border border-l-[3px] px-3 py-1.5 ${TONE[b.status] || TONE.pendente}`}>
-                <p className="font-mono-x text-xs text-zinc-100">{b.time}–{addMinutes(b.time, dur)} <span className="text-zinc-400">· {formatDuration(dur)}</span></p>
+              <div key={b.id} data-testid={`agenda-item-${b.id}`} style={{ ...pos(start, end), left: `${(lane * 100) / lanes}%`, width: `calc(${100 / lanes}% - 2px)` }} className={`absolute overflow-hidden rounded-[2px] border border-l-[3px] px-3 py-1.5 ${TONE[b.status] || TONE.pendente}`}>
+                <p className="font-mono-x truncate text-xs text-zinc-100">{b.time}–{addMinutes(b.time, dur)} <span className="text-zinc-400">· {formatDuration(dur)}</span></p>
                 <p className="truncate text-sm text-zinc-50">{b.name} <span className="text-[#E5C158]">· {b.service_name}</span></p>
               </div>
             );
-          })}
+          }); })()}
         </div>
       </div>
     </div>

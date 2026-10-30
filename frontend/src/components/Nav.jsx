@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Lock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Wordmark } from "@/components/Logo";
 import { scrollToId } from "@/lib/smooth";
@@ -49,6 +50,10 @@ export const Nav = () => {
                   <button key={id} data-testid={`mobile-link-${id}`} onClick={() => go(id)} className="font-display text-left text-4xl text-zinc-100 hover:text-[#D4AF37]">{label}</button>
                 ))}
               </div>
+              <Link data-testid="mobile-link-admin" to="/admin" onClick={() => setOpen(false)}
+                className="mt-12 inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 px-5 py-3 text-sm text-zinc-100 transition-colors hover:border-[#D4AF37] hover:bg-[#D4AF37]/10">
+                <Lock size={15} className="text-[#D4AF37]" /> Acesso Administrativo
+              </Link>
             </SheetContent>
           </Sheet>
         </div>
