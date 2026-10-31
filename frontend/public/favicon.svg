@@ -1,1 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="14" fill="#0D0D0F"/><circle cx="32" cy="32" r="26" stroke="#D4AF37" stroke-width="2"/><path d="M20 43V22l12 14 12-14v21" stroke="#D4AF37" stroke-width="3.4" stroke-linecap="square"/><circle cx="32" cy="14.5" r="1.8" fill="#D4AF37"/></svg>
+{
+  "background_color": "#0D0D0F",
+  "description": "Martins Cabeleireiro — barbearia e salão em Ouro Preto do Oeste - RO. Agende seu horário online.",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "Martins Cabeleireiros",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "Martins Cabeleireiros",
+  "start_url": "/",
+  "theme_color": "#0D0D0F",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
