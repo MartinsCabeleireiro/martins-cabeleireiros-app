@@ -338,45 +338,4 @@ async def admin_create_booking(body: BookingIn, admin: dict = Depends(get_admin)
 
 @api.get("/bookings", response_model=List[dict])
 async def list_bookings(admin: dict = Depends(get_admin)):
-    docs = await db.bookings.find().sort([("date", -1), ("time", 1)]).to_list(1000)
-    return [Booking.from_mongo(d).public() for d in docs]
-
-
-@api.patch("/bookings/{bid}")
-async def update_booking(bid: str, body: StatusIn, admin: dict = Depends(get_admin)):
-    if not ObjectId.is_valid(bid):
-        raise HTTPException(404, "Agendamento não encontrado")
-    res = await db.bookings.update_one({"_id": ObjectId(bid)}, {"$set": {"status": body.status}})
-    if res.matched_count == 0:
-        raise HTTPException(404, "Agendamento não encontrado")
-    return Booking.from_mongo(await db.bookings.find_one({"_id": ObjectId(bid)})).public()
-
-
-@api.delete("/bookings/{bid}")
-async def delete_booking(bid: str, admin: dict = Depends(get_admin)):
-    if not ObjectId.is_valid(bid):
-        raise HTTPException(404, "Agendamento não encontrado")
-    await db.bookings.delete_one({"_id": ObjectId(bid)})
-    return {"ok": True}
-
-
-@api.post("/bookings/{bid}/reminded")
-async def mark_reminded(bid: str, admin: dict = Depends(get_admin)):
-    if not ObjectId.is_valid(bid):
-        raise HTTPException(404, "Agendamento não encontrado")
-    now = datetime.now(timezone.utc).isoformat()
-    res = await db.bookings.update_one({"_id": ObjectId(bid)}, {"$set": {"reminded_at": now}})
-    if res.matched_count == 0:
-        raise HTTPException(404, "Agendamento não encontrado")
-    return {"ok": True, "reminded_at": now}
-
-
-# ---------- Logo ----------
-LOGO_TYPES = {"image/png", "image/jpeg", "image/webp"}
-
-
-@api.get("/settings")
-async def get_settings():
-    doc = await db.settings.find_one({"key": "logo"}, {"version": 1})
-    return {"has_logo": bool(doc), "logo_version": doc.get
-
+    docs = await db.bookings.find().sort([("date", -1), ("time", 
