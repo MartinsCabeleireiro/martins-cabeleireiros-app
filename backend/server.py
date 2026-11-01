@@ -25,6 +25,10 @@ db = client[os.environ['DB_NAME']]
 
 app = FastAPI()
 api = APIRouter(prefix="/api")
+
+# Inclui o router da API para que todas as rotas com /api comecem a funcionar corretamente
+app.include_router(api)
+
 JWT_ALGORITHM = "HS256"
 
 # Rota raiz global para evitar o erro 404 no Render
@@ -538,4 +542,3 @@ async def seed_admin(email: str, pw: str, name: str):
         upd = {"name": name}
         if not verify_password(pw, existing["password_hash"]):
             upd["password_hash"] = hash_password(pw)
-        
