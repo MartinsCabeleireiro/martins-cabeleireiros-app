@@ -2,7 +2,8 @@ import axios from "axios";
 import { useEffect, useState, useCallback } from "react";
 import { FALLBACK_SERVICES } from "@/lib/site";
 
-export const api = axios.create({ baseURL: `${process.env.REACT_APP_BACKEND_URL}` });
+export const BACKEND_URL = (process.env.REACT_APP_BACKEND_URL || "").replace(/\/+$/, "").replace(/\/api$/, "");
+export const api = axios.create({ baseURL: `${BACKEND_URL}/api` });
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("mc_token");

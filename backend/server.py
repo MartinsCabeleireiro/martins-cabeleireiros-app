@@ -27,10 +27,10 @@ app = FastAPI()
 api = APIRouter(prefix="/api")
 JWT_ALGORITHM = "HS256"
 
-# Rota raiz global para evitar o erro 404 no Render
 @app.get("/")
 def read_root():
     return {"status": "online", "message": "Backend do Martins Cabeleireiros a funcionar com sucesso!"}
+
 
 PyObjectId = Annotated[str, BeforeValidator(lambda v: str(v) if isinstance(v, ObjectId) else v)]
 
@@ -538,4 +538,41 @@ async def seed_admin(email: str, pw: str, name: str):
         upd = {"name": name}
         if not verify_password(pw, existing["password_hash"]):
             upd["password_hash"] = hash_password(pw)
-        
+        await db.users.update_one({"email": email}, {"$set": upd})
+
+
+@app.on_event("startup")
+async def startup():
+    await db.users.create_index("email", unique=True)
+    await db.login_attempts.create_index("identifier")
+    await db.services.create_index("slug", unique=True)
+    for i, (slug, name, group, dur, price, desc) in enumerate(SEED_SERVICES):
+        await db.services.update_one(
+            {"slug": slug},
+            {"$set": {"name": name, "group": group, "duration_min": dur, "description": desc, "order": i},
+             "$setOnInsert": {"price": float(price)}},
+            upsert=True)
+    await db.services.delete_many({"slug": {"$nin": [s[0] for s in SEED_SERVICES]}})
+    await db.contacts.create_index("phone", unique=True)
+    await db.contacts.create_index("name")
+    await db.bookings.create_index("phone_digits")
+    async for b in db.bookings.find({}, {"phone": 1}):
+        await db.bookings.update_one({"_id": b["_id"]}, {"$set": {"phone_digits": phone_key(b.get("phone", ""))}})
+    await seed_admin(os.environ["ADMIN_EMAIL"], os.environ["ADMIN_PASSWORD"], os.environ["ADMIN_NAME"])
+    await seed_admin(os.environ["ADMIN2_EMAIL"], os.environ["ADMIN2_PASSWORD"], os.environ["ADMIN2_NAME"])
+
+
+app.include_router(api)
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+logging.basicConfig(level=logging.INFO)
+
+
+@app.on_event("shutdown")
+async def shutdown_db_client():
+    client.close()

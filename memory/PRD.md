@@ -48,6 +48,10 @@ Agendamento (serviço, data seg–sáb, horários 30 min 08:00–19:30, sem dupl
 - Agenda do dia mostra encaixes sobrepostos lado a lado (lanes)
 - Gaveta do menu do site ganhou link "Acesso Administrativo"
 
+## Implemented (2026-11-01, correção)
+- Login 404: server.py tinha sido truncado por commits externos (sem startup/include_router) e api.js perdeu o prefixo /api; restaurado server.py (versão 5c90f25 + rota GET /) e baseURL `${REACT_APP_BACKEND_URL}/api`
+- PWA: manifest.json (start_url "/", standalone, ícones 192/512/maskable), ícones gerados da logo oficial (icon-192, icon-512, icon-maskable-512, logo192, logo512, apple-touch-icon, favicon.ico), sw.js com cache básico (ignora /api), registro em index.js
+
 ## Backlog
 - P1: logo oficial do cliente (substituir mark SVG), fotos reais do salão, preços reais (via painel)
 - P1: bloquear dias/horários (feriados, folgas)
