@@ -34,3 +34,17 @@ export function useServices() {
   }, [load]);
   return { services, reload: load };
 }
+
+export function useProducts(admin = false) {
+  const [products, setProducts] = useState([]);
+  const load = useCallback(async () => {
+    try {
+      const { data } = await api.get(admin ? "/admin/products" : "/products");
+      setProducts(Array.isArray(data) ? data : []);
+    } catch {
+      setProducts([]);
+    }
+  }, [admin]);
+  useEffect(() => { load(); }, [load]);
+  return { products, reload: load };
+}

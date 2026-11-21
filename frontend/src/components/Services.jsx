@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Clock } from "lucide-react";
 import { SectionHead } from "@/components/Reveal";
 import { GROUPS, formatDuration, formatPrice } from "@/lib/site";
+import { finalPrice } from "@/lib/cart";
 
 const SPANS = {
   corte: "lg:col-span-4 lg:row-span-2 h-[440px] lg:h-auto",
@@ -31,7 +32,8 @@ const Card = ({ g, items, i, onBook }) => (
             <button key={s.slug} data-testid={`service-book-${s.slug}`} onClick={() => onBook(s.slug)} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/45 bg-[#0D0D0F]/50 px-3.5 py-1.5 text-xs text-zinc-100 backdrop-blur transition-[background-color,color] duration-300 hover:bg-[#D4AF37] hover:text-[#0D0D0F]">
               {s.name}
               <span className="font-mono-x inline-flex items-center gap-1 opacity-80"><Clock size={11} />{formatDuration(s.duration_min)}</span>
-              {s.price != null && <span className="font-mono-x opacity-90">· {formatPrice(s.price)}</span>}
+              {s.price != null && <span className="font-mono-x opacity-90">· {s.promo_active && <s className="opacity-60">{formatPrice(s.price)}</s>} {formatPrice(finalPrice(s))}</span>}
+              {s.promo_active && <span className="rounded-full bg-[#D4AF37] px-1.5 text-[9px] font-semibold uppercase text-[#0D0D0F]">Promo</span>}
               <ArrowUpRight size={12} />
             </button>
           ))}

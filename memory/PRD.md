@@ -52,6 +52,15 @@ Agendamento (serviço, data seg–sáb, horários 30 min 08:00–19:30, sem dupl
 - Login 404: server.py tinha sido truncado por commits externos (sem startup/include_router) e api.js perdeu o prefixo /api; restaurado server.py (versão 5c90f25 + rota GET /) e baseURL `${REACT_APP_BACKEND_URL}/api`
 - PWA: manifest.json (start_url "/", standalone, ícones 192/512/maskable), ícones gerados da logo oficial (icon-192, icon-512, icon-maskable-512, logo192, logo512, apple-touch-icon, favicon.ico), sw.js com cache básico (ignora /api), registro em index.js
 
+## Implemented (2026-11-21, iteração 7)
+- Multi-serviços + produtos por agendamento (público e painel): soma de preço (com promoções) e duração total bloqueando o intervalo; BookingIn.service_slugs/product_ids; Booking.services/products
+- Promoções (preço fixo ou %), com início/fim opcionais, em serviços e produtos; selo "Promoção" + preço riscado no site e no painel. Aba "Catálogo e promoções" com CRUD de produtos
+- Busca inteligente de clientes (nome/parte/telefone) + "+ Adicionar Nova Cliente" pré-preenchido; busca de serviços/produtos no agendamento
+- Contatos com lista de destino (Contatos do Martins / da Esposa / Agendamentos do site / novas listas), filtro por lista; botão "Sincronizar Contatos do Dispositivo" (Contact Picker no Android; fallback arquivo .vcf)
+- Confirmar agendamento do site salva a cliente automaticamente (lista "Agendamentos do site", sem duplicar por telefone)
+- Bloqueios com abrangência: 1 dia, 1 semana, 1 mês (30 dias), 1 ano, indeterminado; padrão 12:00–14:00; desbloquear regra inteira ou só um dia (except_dates)
+- Editar agendamento (PUT /api/admin/bookings/{id}) com aviso de conflito; calendário mensal colorido (livre/parcial/lotado/bloqueado) + linha do tempo do dia clicável (aba Calendário)
+
 ## Backlog
 - P1: logo oficial do cliente (substituir mark SVG), fotos reais do salão, preços reais (via painel)
 - P1: bloquear dias/horários (feriados, folgas)

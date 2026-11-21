@@ -1,9 +1,10 @@
 import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { SectionHead, Reveal } from "@/components/Reveal";
-import { formatPrice, formatDuration, SITE, GROUPS } from "@/lib/site";
+import { formatDuration, SITE, GROUPS } from "@/lib/site";
+import { PriceTag } from "@/components/PriceTag";
 
-export const Prices = ({ services }) => {
+export const Prices = ({ services, products = [] }) => {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["-12%", "12%"]);
@@ -31,17 +32,32 @@ export const Prices = ({ services }) => {
                   <p className="eyebrow mb-2">{String(gi + 1).padStart(2, "0")} · {g.name}</p>
                   <ul>
                     {items.map((s) => (
-                      <li key={s.slug} data-testid={`price-row-${s.slug}`} className="group flex items-baseline gap-3 border-b border-[#D4AF37]/15 py-4 transition-[padding] duration-500 hover:pl-3">
+                      <li key={s.slug} data-testid={`price-row-${s.slug}`} className="group flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-[#D4AF37]/15 py-4 transition-[padding] duration-500 hover:pl-3">
                         <h3 className="font-display text-2xl text-zinc-50 transition-colors group-hover:text-[#E5C158]">{s.name}</h3>
                         <span data-testid={`price-duration-${s.slug}`} className="font-mono-x shrink-0 text-xs text-zinc-400">{formatDuration(s.duration_min)}</span>
                         <span className="leader" />
-                        <span data-testid={`price-value-${s.slug}`} className="font-mono-x shrink-0 text-sm text-[#E5C158]">{formatPrice(s.price)}</span>
+                        <PriceTag item={s} className="shrink-0 text-sm" />
                       </li>
                     ))}
                   </ul>
                 </Reveal>
               );
             })}
+            {products.length > 0 && (
+              <Reveal delay={0.04}>
+                <p className="eyebrow mb-2">{String(GROUPS.length + 1).padStart(2, "0")} · Produtos</p>
+                <ul>
+                  {products.map((p) => (
+                    <li key={p.id} data-testid={`price-row-product-${p.id}`} className="group flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-[#D4AF37]/15 py-4">
+                      <h3 className="font-display text-2xl text-zinc-50">{p.name}</h3>
+                      {p.description && <span className="text-xs text-zinc-400">{p.description}</span>}
+                      <span className="leader" />
+                      <PriceTag item={p} className="shrink-0 text-sm" />
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            )}
           </div>
         </div>
       </div>

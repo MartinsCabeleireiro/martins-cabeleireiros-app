@@ -3,6 +3,8 @@ import { ptBR } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { Check, Loader2, MessageCircle } from "lucide-react";
 import { formatPrice, formatDuration, addMinutes } from "@/lib/site";
+import { PromoBadge } from "@/components/PriceTag";
+import { finalPrice } from "@/lib/cart";
 
 const Row = ({ k, v, testid }) => (
   <div className="flex items-baseline justify-between gap-4 border-b border-[#D4AF37]/10 py-4">
@@ -11,16 +13,30 @@ const Row = ({ k, v, testid }) => (
   </div>
 );
 
-export const BookingSummary = ({ service, date, time, sending, done, onReset }) => (
+export const BookingSummary = ({ sel, date, time, sending, done, onReset }) => (
   <div className="lg:col-span-5">
     <div className="sticky top-28 border border-[#D4AF37]/25 bg-[#141418] p-7 shadow-[0_0_60px_rgba(212,175,55,0.06)] sm:p-9">
       <p className="eyebrow mb-3">Resumo</p>
       <h3 className="font-display mb-6 text-3xl text-zinc-50">Seu horário</h3>
-      <Row k="Serviço" v={service?.name} testid="summary-service" />
+      <div data-testid="summary-service" className="border-b border-[#D4AF37]/10 pb-3">
+        {[...sel.svcs, ...sel.prods].length === 0 && <p className="py-1 text-zinc-400">Nenhum serviço escolhido</p>}
+        {[...sel.svcs, ...sel.prods].map((x) => (
+          <div key={x.slug || x.id} className="flex items-baseline justify-between gap-3 py-1 text-sm">
+            <span className="text-zinc-100">{x.name}{x.duration_min ? <span className="text-zinc-400"> · {formatDuration(x.duration_min)}</span> : null}</span>
+            <span className="font-mono-x shrink-0 text-zinc-300">{formatPrice(finalPrice(x))}</span>
+          </div>
+        ))}
+      </div>
       <Row k="Data" v={date && format(date, "EEE, dd 'de' MMM", { locale: ptBR })} testid="summary-date" />
-      <Row k="Duração" v={service && formatDuration(service.duration_min)} testid="summary-duration" />
-      <Row k="Horário" v={time && (service ? `${time} às ${addMinutes(time, service.duration_min)}` : time)} testid="summary-time" />
-      <Row k="Valor" v={service && formatPrice(service.price)} testid="summary-price" />
+      <Row k="Duração" v={sel.duration > 0 && formatDuration(sel.duration)} testid="summary-duration" />
+      <Row k="Horário" v={time && (sel.duration ? `${time} às ${addMinutes(time, sel.duration)}` : time)} testid="summary-time" />
+      <div className="flex items-baseline justify-between gap-4 border-b border-[#D4AF37]/10 py-4">
+        <span className="font-mono-x text-xs uppercase tracking-[0.2em] text-zinc-400">Total</span>
+        <span data-testid="summary-price" className="flex items-baseline gap-2 text-right">
+          {sel.total != null && sel.original > sel.total && <><PromoBadge /><span className="font-mono-x text-xs text-zinc-500 line-through">{formatPrice(sel.original)}</span></>}
+          <span className="font-mono-x text-lg text-[#E5C158]">{sel.svcs.length || sel.prods.length ? formatPrice(sel.total) : "—"}</span>
+        </span>
+      </div>
       {done ? (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} data-testid="booking-success" className="mt-8 flex flex-col gap-4">
           <p className="flex items-center gap-2 text-sm text-emerald-300"><Check size={16} /> Pedido registrado. Envie a mensagem no WhatsApp para confirmar.</p>

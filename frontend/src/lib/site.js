@@ -78,3 +78,13 @@ export const formatPhone = (p) => {
 };
 export const clientWa = (phone, text) => `https://wa.me/55${phoneDigits(phone)}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
 export const isoDate = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+export const blockApplies = (b, ds) => {
+  if (b.date > ds || (b.except_dates || []).includes(ds)) return false;
+  return b.forever || (b.until || b.date) >= ds;
+};
+export const blockLabel = (b) => {
+  const fmt = (d) => d.split("-").reverse().join("/");
+  const when = b.forever ? `desde ${fmt(b.date)} · indeterminado` : (b.until && b.until !== b.date ? `${fmt(b.date)} a ${fmt(b.until)}` : fmt(b.date));
+  return `${when} · ${b.all_day ? "Dia inteiro" : `${b.start}–${b.end}`}`;
+};

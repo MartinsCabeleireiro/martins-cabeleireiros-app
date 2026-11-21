@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Check, X, Trash2, MessageCircle } from "lucide-react";
+import { Check, X, Trash2, MessageCircle, Pencil } from "lucide-react";
+import { BookingDialog } from "@/components/admin/BookingDialog";
 import { api, errorText } from "@/lib/api";
 import { formatDuration, addMinutes } from "@/lib/site";
 
@@ -16,6 +17,7 @@ const Act = ({ onClick, label, testid, children }) => (
 export const BookingsPanel = () => {
   const [items, setItems] = useState([]);
   const [filter, setFilter] = useState("todos");
+  const [edit, setEdit] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -26,7 +28,11 @@ export const BookingsPanel = () => {
   useEffect(() => { load(); }, [load]);
 
   const setStatus = async (id, status) => {
-    try { await api.patch(`/bookings/${id}`, { status }); toast.success(`Agendamento ${status}.`); load(); }
+    try {
+      const { data } = await api.patch(`/bookings/${id}`, { status });
+      toast.success(`Agendamento ${status}.${data?.contact_saved ? " Cliente salva na base de contatos." : ""}`);
+      load();
+    }
     catch (e) { toast.error(errorText(e)); }
   };
   const remove = async (id) => {
@@ -39,6 +45,7 @@ export const BookingsPanel = () => {
 
   return (
     <div>
+      <BookingDialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)} booking={edit} onSaved={load} />
       <div className="mb-6 flex flex-wrap gap-2">
         {FILTERS.map(([k, l]) => (
           <button key={k} data-testid={`admin-filter-${k}`} onClick={() => setFilter(k)} className={`rounded-full border px-4 py-1.5 text-sm ${filter === k ? "border-[#D4AF37] bg-[#D4AF37] text-[#0D0D0F]" : "border-[#D4AF37]/25 text-zinc-300"}`}>{l}</button>
@@ -56,6 +63,7 @@ export const BookingsPanel = () => {
             </div>
             <div className="flex items-center gap-2">
               <span data-testid={`admin-booking-status-${b.id}`} className={`mr-2 rounded-full border px-3 py-1 text-xs capitalize ${BADGE[b.status]}`}>{b.status}</span>
+              <Act testid={`admin-edit-${b.id}`} label="Editar" onClick={() => setEdit(b)}><Pencil size={15} /></Act>
               <Act testid={`admin-confirm-${b.id}`} label="Confirmar" onClick={() => setStatus(b.id, "confirmado")}><Check size={15} /></Act>
               <Act testid={`admin-cancel-${b.id}`} label="Cancelar" onClick={() => setStatus(b.id, "cancelado")}><X size={15} /></Act>
               <a data-testid={`admin-wa-${b.id}`} href={waClient(b)} target="_blank" rel="noreferrer" title="WhatsApp do cliente" className="grid h-9 w-9 place-items-center rounded-full border border-[#D4AF37]/20 text-zinc-300 hover:border-[#25D366] hover:text-[#25D366]"><MessageCircle size={15} /></a>

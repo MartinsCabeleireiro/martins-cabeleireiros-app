@@ -8,12 +8,13 @@ import { Booking } from "@/components/Booking";
 import { Location } from "@/components/Location";
 import { Footer } from "@/components/Footer";
 import { WhatsAppFab } from "@/components/WhatsAppFab";
-import { useServices } from "@/lib/api";
+import { useServices, useProducts } from "@/lib/api";
 import { useLenis, scrollToId } from "@/lib/smooth";
 
 export default function Home() {
   useLenis();
   const { services } = useServices();
+  const { products } = useProducts();
   const [preselect, setPreselect] = useState(null);
   const onBook = (slug) => {
     setPreselect({ slug, at: Date.now() });
@@ -26,8 +27,8 @@ export default function Home() {
       <Hero />
       <Marquee />
       <Services services={services} onBook={onBook} />
-      <Prices services={services} />
-      <Booking services={services} preselect={preselect} />
+      <Prices services={services} products={products} />
+      <Booking services={services} products={products} preselect={preselect} />
       <Location />
       <Footer />
       <WhatsAppFab />

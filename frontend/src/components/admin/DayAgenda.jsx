@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, CalendarPlus } from "lucide-react";
-import { AdminBookingDialog } from "@/components/admin/AdminBookingDialog";
+import { ChevronLeft, ChevronRight, CalendarPlus, Ban, Unlock } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { BookingDialog } from "@/components/admin/BookingDialog";
+import { BlockForm } from "@/components/admin/BlockForm";
 import { api, errorText } from "@/lib/api";
-import { addMinutes, formatDuration, toMin } from "@/lib/site";
+import { addMinutes, formatDuration, toMin, blockApplies, blockLabel } from "@/lib/site";
 
 const OPEN = 8 * 60;
 const CLOSE = 20 * 60;
@@ -32,11 +34,12 @@ const withLanes = (list) => {
   return { items: out, lanes: Math.max(ends.length, 1) };
 };
 
-export const DayAgenda = () => {
-  const [day, setDay] = useState(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; });
+export const DayAgenda = ({ day, setDay, onChanged }) => {
   const [bookings, setBookings] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [newOpen, setNewOpen] = useState(false);
+  const [edit, setEdit] = useState(null);
+  const [blockOpen, setBlockOpen] = useState(false);
   const ds = toStr(day);
 
   const load = useCallback(async () => {
@@ -47,10 +50,17 @@ export const DayAgenda = () => {
     } catch (e) { toast.error(errorText(e)); }
   }, []);
   useEffect(() => { load(); }, [load]);
+  const changed = () => { load(); onChanged?.(); };
+  const skip = async (b) => {
+    try { await api.post(`/blocks/${b.id}/skip`, { date: ds }); toast.success("Desbloqueado neste dia."); changed(); } catch (e) { toast.error(errorText(e)); }
+  };
+  const removeRule = async (b) => {
+    try { await api.delete(`/blocks/${b.id}`); toast.success("Regra de bloqueio removida."); changed(); } catch (e) { toast.error(errorText(e)); }
+  };
 
   const shift = (n) => setDay((d) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; });
   const dayBookings = bookings.filter((b) => b.date === ds && b.status !== "cancelado");
-  const dayBlocks = blocks.filter((b) => b.date === ds);
+  const dayBlocks = blocks.filter((b) => blockApplies(b, ds));
   const closed = day.getDay() === 0 || dayBlocks.some((b) => b.all_day);
 
   return (
@@ -61,9 +71,30 @@ export const DayAgenda = () => {
         <input data-testid="agenda-date-input" type="date" value={ds} onChange={(e) => { if (e.target.value) { const [y, m, d] = e.target.value.split("-").map(Number); setDay(new Date(y, m - 1, d)); } }} className="border-b border-[#D4AF37]/30 bg-transparent py-2 text-zinc-50 [color-scheme:dark] focus:outline-none" />
         <p data-testid="agenda-day-label" className="font-display text-2xl text-zinc-50 first-letter:uppercase">{LABEL(day)}</p>
         <span data-testid="agenda-count" className="font-mono-x ml-auto text-xs text-zinc-400">{dayBookings.length} atendimento(s)</span>
+        <button data-testid="agenda-block-button" onClick={() => setBlockOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 px-4 py-2 text-sm text-zinc-100 hover:border-[#D4AF37]"><Ban size={15} /> Bloquear horários</button>
         <button data-testid="agenda-new-booking" onClick={() => setNewOpen(true)} className="inline-flex items-center gap-2 rounded-full bg-[#D4AF37] px-4 py-2 text-sm font-semibold text-[#0D0D0F] hover:bg-[#E5C158]"><CalendarPlus size={15} /> Novo agendamento</button>
       </div>
-      <AdminBookingDialog open={newOpen} onOpenChange={setNewOpen} date={ds} onCreated={load} />
+      {dayBlocks.length > 0 && (
+        <ul data-testid="agenda-day-blocks" className="mb-4 flex flex-col gap-2">
+          {dayBlocks.map((b) => (
+            <li key={b.id} className="flex flex-wrap items-center gap-3 border border-zinc-600/40 bg-[#141418] px-4 py-2 text-sm">
+              <span className="text-zinc-200">{b.reason || "Bloqueio"} <span className="font-mono-x text-xs text-zinc-400">· {blockLabel(b)}</span></span>
+              <span className="ml-auto flex gap-2">
+                <button data-testid={`agenda-skip-${b.id}`} onClick={() => skip(b)} className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-400/10"><Unlock size={13} /> Desbloquear este dia</button>
+                {(b.forever || (b.until && b.until !== b.date)) && <button data-testid={`agenda-remove-rule-${b.id}`} onClick={() => removeRule(b)} className="rounded-full border border-[#D4AF37]/30 px-3 py-1 text-xs text-zinc-300 hover:border-red-400 hover:text-red-300">Remover regra inteira</button>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <BookingDialog open={newOpen} onOpenChange={setNewOpen} date={ds} onSaved={changed} />
+      <BookingDialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)} booking={edit} onSaved={changed} />
+      <Dialog open={blockOpen} onOpenChange={setBlockOpen}>
+        <DialogContent className="border-[#D4AF37]/25 bg-[#141418] p-0 sm:max-w-md">
+          <DialogTitle className="sr-only">Bloquear horários</DialogTitle>
+          <BlockForm key={ds} date={ds} onCreated={() => { setBlockOpen(false); changed(); }} />
+        </DialogContent>
+      </Dialog>
       <div className="relative border border-[#D4AF37]/15 bg-[#141418]" style={{ height: (CLOSE - OPEN) * PX + 16 }}>
         {HOURS.map((h) => (
           <div key={h} className="absolute inset-x-0 flex items-start" style={{ top: (h * 60 - OPEN) * PX + 8 }}>
@@ -81,10 +112,10 @@ export const DayAgenda = () => {
           {(() => { const { items, lanes } = withLanes(dayBookings); return items.map(({ b, start, end, lane }) => {
             const dur = end - start;
             return (
-              <div key={b.id} data-testid={`agenda-item-${b.id}`} style={{ ...pos(start, end), left: `${(lane * 100) / lanes}%`, width: `calc(${100 / lanes}% - 2px)` }} className={`absolute overflow-hidden rounded-[2px] border border-l-[3px] px-3 py-1.5 ${TONE[b.status] || TONE.pendente}`}>
+              <button type="button" key={b.id} data-testid={`agenda-item-${b.id}`} onClick={() => setEdit(b)} title="Editar agendamento" style={{ ...pos(start, end), left: `${(lane * 100) / lanes}%`, width: `calc(${100 / lanes}% - 2px)` }} className={`absolute overflow-hidden rounded-[2px] border border-l-[3px] px-3 py-1.5 text-left transition-[filter] hover:brightness-125 ${TONE[b.status] || TONE.pendente}`}>
                 <p className="font-mono-x truncate text-xs text-zinc-100">{b.time}–{addMinutes(b.time, dur)} <span className="text-zinc-400">· {formatDuration(dur)}</span></p>
                 <p className="truncate text-sm text-zinc-50">{b.name} <span className="text-[#E5C158]">· {b.service_name}</span></p>
-              </div>
+              </button>
             );
           }); })()}
         </div>
